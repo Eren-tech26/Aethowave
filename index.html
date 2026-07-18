@@ -31,13 +31,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .tb-right{display:flex;align-items:center;gap:10px}
 .tb-search-btn{display:flex;align-items:center;gap:6px;background:var(--glass2);border:1px solid var(--gb);border-radius:50px;padding:8px 14px;color:var(--text2);font-size:13px;cursor:pointer}
 .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
-
-/* Wake banner for Render cold start */
 .wake-banner{display:none;align-items:center;gap:10px;background:rgba(123,79,255,0.15);border:1px solid rgba(123,79,255,0.3);border-radius:12px;padding:10px 14px;margin:0 16px 12px;font-size:12px;color:var(--text2)}
 .wake-banner.show{display:flex}
 .wake-dot{width:7px;height:7px;border-radius:50%;background:var(--purple);animation:pulse 1.2s ease-in-out infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:.4;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-
 .pages{flex:1;overflow:hidden;position:relative}
 .page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:0 0 160px;display:none;-webkit-overflow-scrolling:touch}
 .page.active{display:block}
@@ -114,12 +111,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .np-art.playing{box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 80px rgba(123,79,255,.2)}
 .np-art img{width:100%;height:100%;object-fit:cover}
 .np-art-emoji{position:absolute;font-size:72px}
-
-/* Loading overlay on artwork */
 .np-art-loading{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center}
 .np-art-loading.show{display:flex}
 .np-art-loading .spin{margin:0;width:32px;height:32px}
-
 .np-track{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .np-track-info{min-width:0;flex:1}
 .np-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -207,7 +201,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
     </div>
   </div>
 
-  <!-- Cold start banner (shown when waking Render) -->
   <div class="wake-banner" id="wakeBanner">
     <div class="wake-dot"></div>
     <span>Waking up music server… first request may take 30s on free tier</span>
@@ -374,10 +367,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 </nav>
 
 <script>
-// ─────────────────────────────────────────────────────────
-//  CONFIG — replace with your Render URL after deploying
-// ─────────────────────────────────────────────────────────
-const API = 'https://aethowave-api.onrender.com';  // ← UPDATE THIS
+// ── CONFIG ────────────────────────────────────────────────
+const API = 'https://aethowave-api.onrender.com';
 
 // ── STATE ──────────────────────────────────────────────────
 const S = {
@@ -420,15 +411,12 @@ async function apiGet(path, wakingOk = true) {
   return res.json();
 }
 
-// Ping on load to pre-warm Render
 async function prewarm() {
   try {
     await fetch(`${API}/health`);
     serverWoke = true;
     hideWakeBanner();
-  } catch (e) {
-    // Silent — server might be sleeping, first real request will wake it
-  }
+  } catch (e) {}
 }
 
 function showWakeBanner() { document.getElementById('wakeBanner').classList.add('show'); }
@@ -624,8 +612,6 @@ function searchGenre(tag, name) {
 }
 
 // ── PLAYBACK ──────────────────────────────────────────────
-
-// Play a track object from UI (id + metadata, no audio URL yet)
 async function playTrackObject(t) {
   const exists = S.queue.findIndex(x => x.id === t.id);
   if (exists === -1) { S.queue.push(t); S.idx = S.queue.length - 1; }
@@ -640,18 +626,15 @@ async function loadTrack(idx) {
   const t = S.queue[idx];
   S.idx = idx;
 
-  // Update UI immediately with metadata
   updateTrackUI(t);
   showStreamLoading();
   setLoad(true);
   document.getElementById('tab-np').classList.add('has-track');
 
   try {
-    // Fetch the streamable URL from backend
     const data = await apiGet(`/stream/${t.id}`, false);
     const streamUrl = data.url;
 
-    // Update track with fresh metadata if returned
     if (data.track) {
       S.queue[idx] = { ...t, ...data.track };
       updateTrackUI(S.queue[idx]);
@@ -763,7 +746,6 @@ function updateTrackUI(t) {
   document.getElementById('npTitle').textContent = t.title;
   document.getElementById('npArtist').textContent = t.artist;
   const art = document.getElementById('npArt');
-  // Preserve loading overlay
   const loadingEl = document.getElementById('npArtLoading');
   art.innerHTML = t.thumb
     ? `<img src="${t.thumb}" onerror="this.style.display='none'">`
@@ -876,8 +858,7 @@ document.addEventListener('keydown', e => {
 // ── INIT ──────────────────────────────────────────────────
 renderHome();
 nav('home');
-prewarm(); // pre-warm Render on page load
+prewarm();
 </script>
 </body>
 </html>
-
