@@ -267,9 +267,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
           <div class="feat-glow"></div>
           <div class="feat-over"></div>
           <div class="feat-body">
-            <div class="feat-badge">▶ YouTube Music</div>
+            <div class="feat-badge">▶ Featured</div>
             <div class="feat-title">Tonight's Top Hits</div>
-            <div class="feat-sub">Powered by yt-dlp</div>
+            <div class="feat-sub">Curated for you</div>
           </div>
           <div class="feat-play">▶</div>
         </div>
@@ -303,7 +303,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       <div class="search-content">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input id="searchInput" placeholder="Songs, artists, anything on YouTube…" autocomplete="off" oninput="onSearch(this.value)">
+          <input id="searchInput" placeholder="Songs, artists, albums…" autocomplete="off" oninput="onSearch(this.value)">
           <button class="clear-btn" onclick="clearSearch()" id="clearBtn" style="display:none">✕</button>
         </div>
         <div id="searchBody">
@@ -476,7 +476,7 @@ async function renderHome() {
     </div>`).join('');
   renderRecent();
 
-  document.getElementById('trendRow').innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Loading from YouTube…</div>';
+  document.getElementById('trendRow').innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Loading…</div>';
 
   try {
     const data = await apiGet('/trending?genre=pop&limit=12');
@@ -484,7 +484,7 @@ async function renderHome() {
       ? data.results.map(t => tCard(t)).join('')
       : '<div style="padding:20px;color:var(--text3);font-size:12px">No tracks found</div>';
   } catch (e) {
-    document.getElementById('trendRow').innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Could not load — is backend deployed?</div>';
+    document.getElementById('trendRow').innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Could not load. Try again later.</div>';
     console.error('Trending load error:', e);
   }
 }
@@ -567,7 +567,7 @@ function onSearch(q) {
     body.innerHTML = `<div class="sec-title" style="margin-bottom:14px">Browse Genres</div><div class="genre-grid">${genreGridHTML()}</div>`;
     return;
   }
-  body.innerHTML = '<div class="search-loading"><div class="spin"></div>Searching YouTube…</div>';
+  body.innerHTML = '<div class="search-loading"><div class="spin"></div>Searching…</div>';
   searchTimer = setTimeout(() => doSearch(q), 500);
 }
 
@@ -578,7 +578,7 @@ async function doSearch(q) {
     const data = await apiGet(`/search?q=${encodeURIComponent(q)}&limit=20`);
     setLoad(false);
     if (!data.results.length) {
-      body.innerHTML = '<div class="search-empty"><div class="search-empty-icon">🔍</div><p>No results on YouTube</p></div>';
+      body.innerHTML = '<div class="search-empty"><div class="search-empty-icon">🔍</div><p>No results found</p></div>';
       return;
     }
     body.innerHTML = `<div class="sresults">${data.results.map(t => `
@@ -652,7 +652,7 @@ async function loadTrack(idx) {
     console.error('Stream load error:', e);
     hideStreamLoading();
     setLoad(false);
-    toast('Could not stream this track', '⚠️');
+    toast('This track is unavailable. Try another.', '⚠️');
   }
 }
 
