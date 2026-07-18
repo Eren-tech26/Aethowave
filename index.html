@@ -484,9 +484,9 @@ async function renderHome(){
     document.getElementById('trendRow').innerHTML=trending.length?trending.map(t=>tCard(t)).join(''):'<div style="padding:20px;color:var(--text3);font-size:12px">No tracks found</div>';
     document.getElementById('newRow').innerHTML=fresh.length?fresh.map(t=>tCard(t)).join(''):'<div style="padding:20px;color:var(--text3);font-size:12px">No tracks found</div>';
   }catch(e){
-    document.getElementById('trendRow').innerHTML='<div style="padding:20px;color:var(--text3);font-size:12px">Couldn\\'t load — check connection</div>';
+    document.getElementById('trendRow').innerHTML='<div style="padding:20px;color:var(--text3);font-size:12px">Could not load — check connection</div>';
     document.getElementById('newRow').innerHTML='';
-    toast('Couldn\\'t reach music catalog','⚠️');
+    toast('Could not reach music catalog','⚠️');
   }
 }
 function genreGridHTML(){
