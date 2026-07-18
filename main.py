@@ -53,7 +53,8 @@ app = FastAPI(title="AethoWave API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://aethowave.vercel.app"],
+    allow_origins=["https://aethowave.vercel.app", "https://aethowave-api.onrender.com"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
