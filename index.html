@@ -178,9 +178,132 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .lbar{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--pink));z-index:999;transform:scaleX(0);transform-origin:left;display:none}
 .lbar.on{display:block;animation:lb 1.8s ease-in-out infinite}
 @keyframes lb{0%{transform:scaleX(0);transform-origin:left}49%{transform:scaleX(1);transform-origin:left}50%{transform-origin:right}100%{transform:scaleX(0);transform-origin:right}}
+
+/* ── SPLASH SCREEN ─────────────────────────────────────── */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  background:#080808;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:28px;
+  pointer-events:none;
+}
+#splash.hide{
+  animation:splashOut .6s cubic-bezier(.7,0,.3,1) forwards;
+}
+@keyframes splashOut{
+  0%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.06)}
+}
+
+/* Orb glow behind everything */
+.splash-orb{
+  position:absolute;
+  width:320px;height:320px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(123,79,255,.22) 0%,rgba(255,79,154,.10) 50%,transparent 70%);
+  animation:orbPulse 2.4s ease-in-out infinite;
+}
+@keyframes orbPulse{
+  0%,100%{transform:scale(.85);opacity:.6}
+  50%{transform:scale(1.1);opacity:1}
+}
+
+/* Big waveform */
+.splash-wave{
+  display:flex;align-items:center;gap:5px;height:64px;
+  position:relative;z-index:1;
+}
+.sw{
+  width:5px;border-radius:4px;
+  background:linear-gradient(to top,var(--purple),var(--pink));
+  animation:swAnim 1s ease-in-out infinite;
+  opacity:0;
+  animation-fill-mode:forwards;
+}
+.sw:nth-child(1){animation-delay:.0s; --h:18px}
+.sw:nth-child(2){animation-delay:.07s;--h:32px}
+.sw:nth-child(3){animation-delay:.14s;--h:52px}
+.sw:nth-child(4){animation-delay:.21s;--h:64px}
+.sw:nth-child(5){animation-delay:.28s;--h:44px}
+.sw:nth-child(6){animation-delay:.35s;--h:56px}
+.sw:nth-child(7){animation-delay:.42s;--h:36px}
+.sw:nth-child(8){animation-delay:.49s;--h:24px}
+.sw:nth-child(9){animation-delay:.56s;--h:40px}
+.sw:nth-child(10){animation-delay:.63s;--h:28px}
+.sw:nth-child(11){animation-delay:.70s;--h:48px}
+.sw:nth-child(12){animation-delay:.77s;--h:20px}
+
+@keyframes swAnim{
+  0%{height:4px;opacity:0}
+  30%{opacity:1;height:var(--h)}
+  60%{height:calc(var(--h) * .45)}
+  80%{height:var(--h)}
+  100%{height:calc(var(--h) * .6);opacity:1}
+}
+
+/* Logo text */
+.splash-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:32px;
+  letter-spacing:-1px;
+  background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.6) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  opacity:0;
+  transform:translateY(10px);
+  animation:logoIn .5s cubic-bezier(.2,.8,.3,1) .9s forwards;
+  position:relative;z-index:1;
+}
+@keyframes logoIn{
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Tagline */
+.splash-tag{
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.3);
+  opacity:0;
+  animation:logoIn .4s ease 1.2s forwards;
+  position:relative;z-index:1;
+}
+
+/* Bottom progress bar */
+.splash-bar{
+  position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:rgba(255,255,255,.05);
+}
+.splash-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--purple),var(--pink));
+  width:0%;
+  animation:barFill 1.8s cubic-bezier(.4,0,.2,1) .2s forwards;
+}
+@keyframes barFill{
+  0%{width:0%}
+  60%{width:75%}
+  100%{width:100%}
+}
 </style>
 </head>
 <body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-orb"></div>
+  <div class="splash-wave">
+    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
+    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
+    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
+    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
+  </div>
+  <div class="splash-logo">AethoWave</div>
+  <div class="splash-tag">Feel Every Beat</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
 
 <div class="lbar" id="lbar"></div>
 <div class="toasts" id="toasts"></div>
@@ -854,6 +977,16 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 's') toggleShuffle();
   if (e.key.toLowerCase() === 'r') toggleRepeat();
 });
+
+// ── SPLASH ────────────────────────────────────────────────
+(function() {
+  const splash = document.getElementById('splash');
+  // Dismiss after 2.4s — enough for all animations to land
+  setTimeout(() => {
+    splash.classList.add('hide');
+    setTimeout(() => { splash.style.display = 'none'; }, 650);
+  }, 2400);
+})();
 
 // ── INIT ──────────────────────────────────────────────────
 renderHome();
