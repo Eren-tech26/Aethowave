@@ -13,25 +13,23 @@ import hashlib
 import os
 import json
 import time
-import firebase_admin
-from firebase_admin import credentials, firestore, storage
-from typing import Optional
 import logging
+from typing import Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ── FIREBASE INIT ──────────────────────────────────────────
-# On Render: set FIREBASE_SERVICE_ACCOUNT env var as JSON string
+# ── FIREBASE INIT (optional) ───────────────────────────────
 firebase_initialized = False
 db = None
-bucket = None
 
 def init_firebase():
-    global firebase_initialized, db, bucket
+    global firebase_initialized, db
     if firebase_initialized:
         return
     try:
+        import firebase_admin
+        from firebase_admin import credentials, firestore
         sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
         if sa_json:
             sa_dict = json.loads(sa_json)
@@ -40,7 +38,6 @@ def init_firebase():
                 "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET", "")
             })
             db = firestore.client()
-            bucket = storage.bucket()
             firebase_initialized = True
             logger.info("Firebase initialized ✓")
     except Exception as e:
@@ -49,47 +46,74 @@ def init_firebase():
 init_firebase()
 
 # ── APP ────────────────────────────────────────────────────
-app = FastAPI(title="AethoWave API", version="1.0.0")
+app = FastAPI(title="AethoWave API", version="1.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://aethowave.vercel.app", "https://aethowave-api.onrender.com"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"],  # Allow all origins — restrict after you know your Vercel URL
+    allow_credentials=False,
+    allow_methods=["GET", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# ── YT-DLP HELPERS ────────────────────────────────────────
+# ── YT-DLP OPTIONS ────────────────────────────────────────
+# These headers + options help bypass YouTube bot detection
+_YT_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/125.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
 YDL_SEARCH_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "extract_flat": True,
     "default_search": "ytsearch",
     "skip_download": True,
+    "http_headers": _YT_HEADERS,
+    # Use Android client — less bot detection than web client
+    "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
 }
 
-YDL_INFO_OPTS = {
+YDL_STREAM_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "skip_download": True,
+    # Prefer opus/m4a audio-only streams
     "format": "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio/best",
-    "extract_flat": False,
+    "http_headers": _YT_HEADERS,
+    "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+    # Avoid age-restricted / DRM content
+    "age_limit": 17,
 }
 
-def track_id(video_id: str) -> str:
-    return hashlib.md5(video_id.encode()).hexdigest()[:12]
+def fmt_dur(s: int) -> str:
+    if not s:
+        return "0:00"
+    m, sec = divmod(int(s), 60)
+    h, m = divmod(m, 60)
+    if h:
+        return f"{h}:{m:02d}:{sec:02d}"
+    return f"{m}:{sec:02d}"
 
 def format_track(entry: dict) -> dict:
     vid_id = entry.get("id", "")
     thumbnail = (
         entry.get("thumbnail")
-        or f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg"
+        or (f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg" if vid_id else "")
     )
     duration = entry.get("duration") or 0
+    # Clean up auto-generated channel names like "Artist - Topic"
+    artist = entry.get("uploader") or entry.get("channel") or "Unknown Artist"
+    if artist.endswith(" - Topic"):
+        artist = artist[:-8]
     return {
         "id": vid_id,
         "title": entry.get("title", "Unknown"),
-        "artist": entry.get("uploader") or entry.get("channel") or "Unknown Artist",
+        "artist": artist,
         "thumb": thumbnail,
         "duration": int(duration),
         "duration_str": fmt_dur(int(duration)),
@@ -97,16 +121,15 @@ def format_track(entry: dict) -> dict:
         "youtube_url": f"https://youtube.com/watch?v={vid_id}",
     }
 
-def fmt_dur(s: int) -> str:
-    m, sec = divmod(s, 60)
-    h, m = divmod(m, 60)
-    if h:
-        return f"{h}:{m:02d}:{sec:02d}"
-    return f"{m}:{sec:02d}"
+# ── CACHE ─────────────────────────────────────────────────
+_mem_cache: dict = {}  # fallback in-memory cache (lost on restart)
 
-# ── CACHE HELPERS ────────────────────────────────────────
 async def get_cached_url(video_id: str) -> Optional[str]:
-    """Check Firestore for a cached stream URL."""
+    # In-memory first
+    entry = _mem_cache.get(video_id)
+    if entry and time.time() - entry["ts"] < 14400:
+        return entry["url"]
+
     if not db:
         return None
     try:
@@ -114,13 +137,15 @@ async def get_cached_url(video_id: str) -> Optional[str]:
         if doc.exists:
             data = doc.to_dict()
             if time.time() - data.get("cached_at", 0) < 14400:
-                return data.get("url")
+                url = data.get("url")
+                _mem_cache[video_id] = {"url": url, "ts": data["cached_at"]}
+                return url
     except Exception as e:
         logger.warning(f"Cache read failed: {e}")
     return None
 
 async def cache_url(video_id: str, url: str, metadata: dict):
-    """Store stream URL + metadata in Firestore."""
+    _mem_cache[video_id] = {"url": url, "ts": time.time()}
     if not db:
         return
     try:
@@ -136,7 +161,7 @@ async def cache_url(video_id: str, url: str, metadata: dict):
 
 @app.get("/")
 async def root():
-    return {"status": "AethoWave API online 🎵", "version": "1.0.0"}
+    return {"status": "AethoWave API online 🎵", "version": "1.1.0"}
 
 @app.get("/health")
 async def health():
@@ -145,27 +170,24 @@ async def health():
 
 @app.get("/search")
 async def search(q: str = Query(..., min_length=1), limit: int = Query(15, le=25)):
-    """
-    Search YouTube for tracks.
-    GET /search?q=lofi+beats&limit=15
-    """
+    """Search YouTube for tracks. GET /search?q=lofi+beats&limit=15"""
     try:
-        results = []
-        search_query = f"ytsearch{limit}:{q}"
-
+        search_query = f"ytsearch{limit}:{q} official audio"
         loop = asyncio.get_running_loop()
+
         def _search():
             with yt_dlp.YoutubeDL(YDL_SEARCH_OPTS) as ydl:
                 info = ydl.extract_info(search_query, download=False)
                 return info.get("entries", [])
 
         entries = await loop.run_in_executor(None, _search)
-
-        for entry in entries:
+        results = []
+        for entry in (entries or []):
             if not entry:
                 continue
             dur = entry.get("duration") or 0
-            if dur > 600:
+            # Skip videos longer than 10 min (likely not songs)
+            if dur and dur > 600:
                 continue
             results.append(format_track(entry))
 
@@ -181,83 +203,102 @@ async def stream_url(video_id: str, background_tasks: BackgroundTasks):
     """
     Get a streamable audio URL for a YouTube video.
     GET /stream/dQw4w9WgXcQ
-    Returns: { url, expires_in, track }
+    Returns: { url, proxy_url, expires_in, track }
+    
+    The response now also includes `proxy_url` — use it as a fallback
+    if the direct CDN URL fails due to CORS or expiry.
     """
     cached = await get_cached_url(video_id)
     if cached:
         logger.info(f"Cache hit: {video_id}")
-        return {"url": cached, "cached": True, "video_id": video_id}
-
-    try:
-        yt_url = f"https://youtube.com/watch?v={video_id}"
-        loop = asyncio.get_running_loop()
-
-        def _extract():
-            with yt_dlp.YoutubeDL(YDL_INFO_OPTS) as ydl:
-                info = ydl.extract_info(yt_url, download=False)
-                return info
-
-        info = await loop.run_in_executor(None, _extract)
-
-        audio_url = None
-        formats = info.get("formats", [])
-
-        for fmt in reversed(formats):
-            if fmt.get("acodec") != "none" and fmt.get("vcodec") == "none":
-                ext = fmt.get("ext", "")
-                if ext in ("webm", "m4a", "opus"):
-                    audio_url = fmt.get("url")
-                    break
-
-        if not audio_url:
-            for fmt in reversed(formats):
-                if fmt.get("acodec") != "none":
-                    audio_url = fmt.get("url")
-                    break
-
-        if not audio_url:
-            raise HTTPException(status_code=404, detail="No audio stream found")
-
-        track_meta = format_track(info)
-        background_tasks.add_task(cache_url, video_id, audio_url, track_meta)
-
         return {
-            "url": audio_url,
-            "cached": False,
+            "url": cached,
+            "proxy_url": f"/proxy-stream/{video_id}",
+            "cached": True,
             "video_id": video_id,
-            "track": track_meta,
-            "expires_in": 14400,
         }
 
-    except HTTPException:
-        raise
+    yt_url = f"https://youtube.com/watch?v={video_id}"
+    loop = asyncio.get_running_loop()
+
+    def _extract():
+        with yt_dlp.YoutubeDL(YDL_STREAM_OPTS) as ydl:
+            return ydl.extract_info(yt_url, download=False)
+
+    try:
+        info = await loop.run_in_executor(None, _extract)
+    except yt_dlp.utils.DownloadError as e:
+        err = str(e)
+        logger.error(f"yt-dlp download error for {video_id}: {err}")
+        if "Video unavailable" in err or "Private video" in err:
+            raise HTTPException(status_code=404, detail="Video unavailable")
+        raise HTTPException(status_code=502, detail=f"Extraction failed: {err}")
     except Exception as e:
-        logger.error(f"Stream extraction error for {video_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Could not extract audio: {str(e)}")
+        logger.error(f"Unexpected extraction error for {video_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # Pick best audio-only format
+    audio_url = None
+    formats = info.get("formats") or []
+
+    # Prefer audio-only streams (no video track)
+    for fmt in reversed(formats):
+        if fmt.get("acodec") != "none" and fmt.get("vcodec") == "none":
+            if fmt.get("ext") in ("webm", "m4a", "opus"):
+                audio_url = fmt.get("url")
+                break
+
+    # Fall back to any audio
+    if not audio_url:
+        for fmt in reversed(formats):
+            if fmt.get("acodec") != "none":
+                audio_url = fmt.get("url")
+                break
+
+    # Last resort — top-level url
+    if not audio_url:
+        audio_url = info.get("url")
+
+    if not audio_url:
+        raise HTTPException(status_code=404, detail="No audio stream found")
+
+    track_meta = format_track(info)
+    background_tasks.add_task(cache_url, video_id, audio_url, track_meta)
+
+    return {
+        "url": audio_url,
+        "proxy_url": f"/proxy-stream/{video_id}",
+        "cached": False,
+        "video_id": video_id,
+        "track": track_meta,
+        "expires_in": 14400,
+    }
 
 
 @app.get("/trending")
 async def trending(genre: str = Query("music", max_length=50), limit: int = Query(12, le=20)):
-    """
-    Get trending tracks for a genre.
-    GET /trending?genre=lofi&limit=12
-    """
+    """Get trending tracks for a genre. GET /trending?genre=lofi&limit=12"""
     query_map = {
-        "pop": "top pop hits 2025",
-        "hiphop": "best hip hop songs 2025",
-        "rnb": "best r&b songs 2025",
+        "pop": "top pop hits 2025 official audio",
+        "hiphop": "best hip hop songs 2025 audio",
+        "rnb": "best r&b songs 2025 audio",
         "electronic": "best electronic music 2025",
-        "lofi": "lofi hip hop beats study",
-        "rock": "best rock songs 2025",
-        "jazz": "best jazz music",
-        "classical": "best classical music",
-        "indie": "best indie songs 2025",
-        "latin": "best latin hits 2025",
+        "lofi": "lofi hip hop beats study chill",
+        "rock": "best rock songs 2025 official",
+        "jazz": "best jazz music instrumental",
+        "classical": "best classical music orchestra",
+        "indie": "best indie songs 2025 audio",
+        "latin": "best latin hits 2025 audio",
+        "downtempo": "downtempo chill music mix",
+        "ambient": "ambient focus music instrumental",
+        "acoustic": "acoustic songs morning playlist",
+        "dance": "dance pop hits 2025",
     }
     search_q = query_map.get(genre.lower(), f"top {genre} music 2025")
 
     try:
         loop = asyncio.get_running_loop()
+
         def _search():
             with yt_dlp.YoutubeDL(YDL_SEARCH_OPTS) as ydl:
                 info = ydl.extract_info(f"ytsearch{limit}:{search_q}", download=False)
@@ -265,11 +306,11 @@ async def trending(genre: str = Query("music", max_length=50), limit: int = Quer
 
         entries = await loop.run_in_executor(None, _search)
         results = []
-        for e in entries:
+        for e in (entries or []):
             if not e:
                 continue
             dur = e.get("duration") or 0
-            if dur > 600:
+            if dur and dur > 600:
                 continue
             results.append(format_track(e))
 
@@ -280,44 +321,48 @@ async def trending(genre: str = Query("music", max_length=50), limit: int = Quer
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/proxy-stream/{video_id}")
+async def proxy_stream(video_id: str, background_tasks: BackgroundTasks):
+    """
+    Proxy audio through the server — use when direct CDN URL fails (CORS / expiry).
+    GET /proxy-stream/dQw4w9WgXcQ
+    """
+    # Get (possibly cached) stream URL
+    audio_url = await get_cached_url(video_id)
+    if not audio_url:
+        data = await stream_url(video_id, background_tasks)
+        audio_url = data["url"]
+
+    async def _stream():
+        headers = {**_YT_HEADERS, "Range": "bytes=0-"}
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with client.stream("GET", audio_url, headers=headers) as r:
+                async for chunk in r.aiter_bytes(chunk_size=16384):
+                    yield chunk
+
+    return StreamingResponse(
+        _stream(),
+        media_type="audio/webm",
+        headers={
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
 @app.get("/metadata/{video_id}")
 async def metadata(video_id: str):
-    """
-    Get track metadata + thumbnail only (no stream URL).
-    GET /metadata/dQw4w9WgXcQ
-    """
+    """Get track metadata only. GET /metadata/dQw4w9WgXcQ"""
     try:
         yt_url = f"https://youtube.com/watch?v={video_id}"
         loop = asyncio.get_running_loop()
+
         def _extract():
-            opts = {**YDL_INFO_OPTS, "skip_download": True}
-            with yt_dlp.YoutubeDL(opts) as ydl:
+            with yt_dlp.YoutubeDL(YDL_STREAM_OPTS) as ydl:
                 return ydl.extract_info(yt_url, download=False)
 
         info = await loop.run_in_executor(None, _extract)
         return {"track": format_track(info)}
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.get("/proxy-stream/{video_id}")
-async def proxy_stream(video_id: str, background_tasks: BackgroundTasks):
-    """
-    Proxy the audio stream through the server (handles CORS on some yt URLs).
-    Only use if direct URL fails due to CORS.
-    """
-    stream_data = await stream_url(video_id, background_tasks)
-    audio_url = stream_data["url"]
-
-    async def stream_audio():
-        async with httpx.AsyncClient(timeout=30) as client:
-            async with client.stream("GET", audio_url) as r:
-                async for chunk in r.aiter_bytes(chunk_size=8192):
-                    yield chunk
-
-    return StreamingResponse(
-        stream_audio(),
-        media_type="audio/webm",
-        headers={"Accept-Ranges": "bytes"},
-    )
