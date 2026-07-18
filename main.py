@@ -12,6 +12,7 @@ import asyncio
 import hashlib
 import os
 import json
+import time
 import firebase_admin
 from firebase_admin import credentials, firestore, storage
 from typing import Optional
@@ -52,7 +53,7 @@ app = FastAPI(title="AethoWave API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Lock to your Vercel domain in production
+    allow_origins=["https://aethowave.vercel.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -111,8 +112,6 @@ async def get_cached_url(video_id: str) -> Optional[str]:
         doc = db.collection("stream_cache").document(video_id).get()
         if doc.exists:
             data = doc.to_dict()
-            # URLs expire after ~5 hours (yt-dlp URLs are time-limited)
-            import time
             if time.time() - data.get("cached_at", 0) < 14400:
                 return data.get("url")
     except Exception as e:
@@ -124,7 +123,6 @@ async def cache_url(video_id: str, url: str, metadata: dict):
     if not db:
         return
     try:
-        import time
         db.collection("stream_cache").document(video_id).set({
             "url": url,
             "cached_at": time.time(),
@@ -154,7 +152,7 @@ async def search(q: str = Query(..., min_length=1), limit: int = Query(15, le=25
         results = []
         search_query = f"ytsearch{limit}:{q}"
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         def _search():
             with yt_dlp.YoutubeDL(YDL_SEARCH_OPTS) as ydl:
                 info = ydl.extract_info(search_query, download=False)
@@ -165,7 +163,6 @@ async def search(q: str = Query(..., min_length=1), limit: int = Query(15, le=25
         for entry in entries:
             if not entry:
                 continue
-            # Filter out very long videos (>10min for music focus)
             dur = entry.get("duration") or 0
             if dur > 600:
                 continue
@@ -185,7 +182,6 @@ async def stream_url(video_id: str, background_tasks: BackgroundTasks):
     GET /stream/dQw4w9WgXcQ
     Returns: { url, expires_in, track }
     """
-    # Check cache first
     cached = await get_cached_url(video_id)
     if cached:
         logger.info(f"Cache hit: {video_id}")
@@ -193,7 +189,7 @@ async def stream_url(video_id: str, background_tasks: BackgroundTasks):
 
     try:
         yt_url = f"https://youtube.com/watch?v={video_id}"
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         def _extract():
             with yt_dlp.YoutubeDL(YDL_INFO_OPTS) as ydl:
@@ -202,11 +198,9 @@ async def stream_url(video_id: str, background_tasks: BackgroundTasks):
 
         info = await loop.run_in_executor(None, _extract)
 
-        # Get best audio URL
         audio_url = None
         formats = info.get("formats", [])
 
-        # Prefer webm/opus or m4a for web streaming
         for fmt in reversed(formats):
             if fmt.get("acodec") != "none" and fmt.get("vcodec") == "none":
                 ext = fmt.get("ext", "")
@@ -214,7 +208,6 @@ async def stream_url(video_id: str, background_tasks: BackgroundTasks):
                     audio_url = fmt.get("url")
                     break
 
-        # Fallback to any audio
         if not audio_url:
             for fmt in reversed(formats):
                 if fmt.get("acodec") != "none":
@@ -225,8 +218,6 @@ async def stream_url(video_id: str, background_tasks: BackgroundTasks):
             raise HTTPException(status_code=404, detail="No audio stream found")
 
         track_meta = format_track(info)
-
-        # Cache in background
         background_tasks.add_task(cache_url, video_id, audio_url, track_meta)
 
         return {
@@ -234,7 +225,7 @@ async def stream_url(video_id: str, background_tasks: BackgroundTasks):
             "cached": False,
             "video_id": video_id,
             "track": track_meta,
-            "expires_in": 14400,  # ~4 hours
+            "expires_in": 14400,
         }
 
     except HTTPException:
@@ -251,21 +242,21 @@ async def trending(genre: str = Query("music", max_length=50), limit: int = Quer
     GET /trending?genre=lofi&limit=12
     """
     query_map = {
-        "pop": "top pop hits 2024",
-        "hiphop": "best hip hop songs 2024",
-        "rnb": "best r&b songs 2024",
-        "electronic": "best electronic music 2024",
+        "pop": "top pop hits 2025",
+        "hiphop": "best hip hop songs 2025",
+        "rnb": "best r&b songs 2025",
+        "electronic": "best electronic music 2025",
         "lofi": "lofi hip hop beats study",
-        "rock": "best rock songs 2024",
+        "rock": "best rock songs 2025",
         "jazz": "best jazz music",
         "classical": "best classical music",
-        "indie": "best indie songs 2024",
-        "latin": "best latin hits 2024",
+        "indie": "best indie songs 2025",
+        "latin": "best latin hits 2025",
     }
-    search_q = query_map.get(genre.lower(), f"top {genre} music 2024")
+    search_q = query_map.get(genre.lower(), f"top {genre} music 2025")
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         def _search():
             with yt_dlp.YoutubeDL(YDL_SEARCH_OPTS) as ydl:
                 info = ydl.extract_info(f"ytsearch{limit}:{search_q}", download=False)
@@ -296,7 +287,7 @@ async def metadata(video_id: str):
     """
     try:
         yt_url = f"https://youtube.com/watch?v={video_id}"
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         def _extract():
             opts = {**YDL_INFO_OPTS, "skip_download": True}
             with yt_dlp.YoutubeDL(opts) as ydl:
@@ -310,12 +301,12 @@ async def metadata(video_id: str):
 
 
 @app.get("/proxy-stream/{video_id}")
-async def proxy_stream(video_id: str):
+async def proxy_stream(video_id: str, background_tasks: BackgroundTasks):
     """
     Proxy the audio stream through the server (handles CORS on some yt URLs).
     Only use if direct URL fails due to CORS.
     """
-    stream_data = await stream_url(video_id, BackgroundTasks())
+    stream_data = await stream_url(video_id, background_tasks)
     audio_url = stream_data["url"]
 
     async def stream_audio():
@@ -329,4 +320,3 @@ async def proxy_stream(video_id: str):
         media_type="audio/webm",
         headers={"Accept-Ranges": "bytes"},
     )
-
