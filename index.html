@@ -353,7 +353,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 </nav>
 
 <script>
-const API = 'https://aethowave-api.onrender.com';
+  const API = 'https://aethowave-api.onrender.com';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1500;
 
 // ── WAKE LOCK ─────────────────────────────────────────────
 const noSleep = new NoSleep();
@@ -365,12 +367,14 @@ function enableWakeLock() {
 
 // ── AUDIO PLAYER ─────────────────────────────────────────
 const audio = document.getElementById('audioEl');
+let streamRetries = 0;
 
 audio.addEventListener('playing', () => {
   S.playing = true;
   updatePlayBtns();
   hideStreamLoading();
   setLoad(false);
+  streamRetries = 0;
   if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
 });
 
@@ -381,7 +385,7 @@ audio.addEventListener('pause', () => {
 });
 
 audio.addEventListener('waiting', () => { setLoad(true); });
-audio.addEventListener('canplay', () => { setLoad(false); });
+audio.addEventListener('canplay', () => { setLoad(false); hideStreamLoading(); });
 
 audio.addEventListener('timeupdate', () => {
   S.currentTime = audio.currentTime;
@@ -403,14 +407,45 @@ audio.addEventListener('ended', () => {
   onEnded();
 });
 
-audio.addEventListener('error', () => {
+audio.addEventListener('error', async (e) => {
+  console.error('Audio error:', audio.error);
   hideStreamLoading();
   setLoad(false);
-  toast('Stream error — trying proxy…', '⚠️');
+  
   const t = S.queue[S.idx];
-  if (t) {
-    audio.src = `${API}/proxy-stream/${t.id}`;
-    audio.play().catch(() => toast('Playback failed', '⚠️'));
+  if (!t) return;
+
+  if (streamRetries < MAX_RETRIES) {
+    streamRetries++;
+    toast(`Retry ${streamRetries}/${MAX_RETRIES}...`, '🔄');
+    await new Promise(r => setTimeout(r, RETRY_DELAY));
+    
+    // Try proxy stream
+    audio.src = `${API}/proxy-stream/${t.id}?t=${Date.now()}`;
+    audio.load();
+    audio.play().catch(async () => {
+      // If proxy fails, try fresh extract
+      try {
+        const data = await apiGet(`/stream/${t.id}?fresh=1`);
+        audio.src = data.url;
+        audio.load();
+        await audio.play();
+      } catch(e2) {
+        if (streamRetries < MAX_RETRIES) {
+          streamRetries++;
+          toast(`Retry ${streamRetries}/${MAX_RETRIES}...`, '🔄');
+          await new Promise(r => setTimeout(r, RETRY_DELAY));
+          audio.error.code = 0; // reset
+          audio.currentTime = 0;
+        } else {
+          toast('Stream unavailable — next track', '⚠️');
+          nextTrack();
+        }
+      }
+    });
+  } else {
+    toast('Skipping unavailable track', '⚠️');
+    nextTrack();
   }
 });
 
@@ -447,15 +482,28 @@ const S = {
 let serverWoke = false;
 async function apiGet(path) {
   if (!serverWoke) showWakeBanner();
-  const res = await fetch(`${API}${path}`);
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  serverWoke = true;
-  hideWakeBanner();
-  return res.json();
+  try {
+    const res = await fetch(`${API}${path}`);
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    serverWoke = true;
+    hideWakeBanner();
+    return res.json();
+  } catch(e) {
+    console.error('API error:', e);
+    throw e;
+  }
 }
+
 async function prewarm() {
-  try { await fetch(`${API}/health`); serverWoke = true; hideWakeBanner(); } catch(e) {}
+  try { 
+    await fetch(`${API}/health`); 
+    serverWoke = true; 
+    hideWakeBanner(); 
+  } catch(e) {
+    console.log('Prewarm failed:', e);
+  }
 }
+
 function showWakeBanner() { document.getElementById('wakeBanner').classList.add('show'); }
 function hideWakeBanner() { document.getElementById('wakeBanner').classList.remove('show'); }
 
@@ -468,6 +516,7 @@ const PLAYLISTS = [
   {emoji:'🌅',name:'Morning Boost',genre:'acoustic',grad:'#3a2a0a,#FFB74F'},
   {emoji:'💜',name:'R&B Soul',genre:'rnb',grad:'#2a0a3a,#CC4FFF'},
 ];
+
 const GENRES = [
   {name:'Pop',genre:'pop',emoji:'🎤',grad:'#4F1FCC,#7B4FFF'},
   {name:'Hip-Hop',genre:'hiphop',emoji:'🎧',grad:'#1a1a1a,#444'},
@@ -492,10 +541,12 @@ function nav(tab) {
   if (tab==='lib') renderLib('liked');
   if (tab==='home') setGreet();
 }
+
 function goSearch() {
   nav('search');
   setTimeout(()=>document.getElementById('searchInput').focus(),200);
 }
+
 function setGreet() {
   const h = new Date().getHours();
   document.getElementById('greetText').textContent = h<12?'Good morning':h<18?'Good afternoon':'Good evening';
@@ -649,6 +700,7 @@ async function loadTrack(idx) {
   S.idx = idx;
   S.currentTime = 0;
   S.duration = 0;
+  streamRetries = 0;
   audio.pause();
   audio.src = '';
 
@@ -658,20 +710,31 @@ async function loadTrack(idx) {
   document.getElementById('tab-np').classList.add('has-track');
 
   try {
+    // Get fresh stream URL with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    
     const data = await apiGet(`/stream/${t.id}`);
+    clearTimeout(timeoutId);
+    
     audio.src = data.url;
     audio.volume = S.muted ? 0 : S.vol / 100;
     await audio.play();
   } catch(e) {
-    toast('Trying proxy stream…', '⚠️');
+    console.error('Stream load error:', e);
+    hideStreamLoading();
+    setLoad(false);
+    toast('Stream error — trying proxy…', '⚠️');
     try {
-      audio.src = `${API}/proxy-stream/${t.id}`;
+      audio.src = `${API}/proxy-stream/${t.id}?t=${Date.now()}`;
       audio.volume = S.muted ? 0 : S.vol / 100;
+      audio.load();
       await audio.play();
     } catch(e2) {
       hideStreamLoading();
       setLoad(false);
-      toast('Could not play track', '⚠️');
+      toast('Skipping track…', '⚠️');
+      nextTrack();
     }
   }
 }
