@@ -317,6 +317,7 @@ const S = {
 
 const audio = document.getElementById('audioEl');
 audio.volume = S.vol / 100;
+audio.crossOrigin = 'anonymous';
 
 audio.addEventListener('loadedmetadata', () => { S.duration = audio.duration || 0; updateProgress(); });
 audio.addEventListener('timeupdate', () => { S.currentTime = audio.currentTime || 0; updateProgress(); updateMediaSessionPosition(); });
@@ -326,10 +327,10 @@ audio.addEventListener('waiting', () => setLoad(true));
 audio.addEventListener('canplay', () => { setLoad(false); hideStreamLoading(); });
 audio.addEventListener('ended', onEnded);
 audio.addEventListener('error', (e) => {
-  console.error('Audio error', e);
+  console.error('Audio error', audio.error);
   hideStreamLoading(); setLoad(false);
   toast('Track unavailable — trying next', '⚠️');
-  setTimeout(nextTrack, 1000);
+  setTimeout(nextTrack, 1200);
 });
 
 function setupMediaSession(t) {
@@ -422,6 +423,7 @@ function tCard(t) {
   return `<div class="tcard" onclick='playTrackObject(${trackJSON(t)})'><div class="tcard-art"><img src="${t.thumb}" onerror="this.style.display='none'" loading="lazy"><div class="tcard-art-icon">🎵</div><div class="tcard-play-btn">▶</div></div><div class="tcard-name">${esc(t.title)}</div><div class="tcard-artist">${esc(t.artist)}</div>${t.duration_str?`<div class="tcard-dur">${t.duration_str}</div>`:''}</div>`;
 }
 function trackJSON(t) { return JSON.stringify({id:t.id,title:t.title,artist:t.artist,thumb:t.thumb,duration_str:t.duration_str||''}).replace(/"/g,'&quot;'); }
+
 async function playFeatured() {
   toast('Loading trending hits…','🔥');
   try { const data=await apiGet('/trending?genre=pop&limit=10'); if(!data.results.length){toast('No tracks found','⚠️');return;} S.queue=data.results;S.idx=0;loadTrack(0);nav('np'); } catch(e){toast('Could not load','⚠️');}
@@ -459,24 +461,34 @@ function playTrackObject(t) {
   loadTrack(S.idx); addToHistory(t); nav('np');
 }
 
+// KEY FIX: API returns flat object {url, title, artist, thumb, duration, duration_str, mime_type}
+// NOT nested under data.track
 async function loadTrack(idx) {
   if(idx<0||idx>=S.queue.length) return;
-  const t=S.queue[idx];
-  S.idx=idx;
+  const t = S.queue[idx];
+  S.idx = idx;
   updateTrackUI(t);
-  showStreamLoading(); setLoad(true);
+  showStreamLoading();
+  setLoad(true);
   document.getElementById('tab-np').classList.add('has-track');
 
   try {
     const data = await apiGet(`/stream/${t.id}`, false);
 
-    if (data.track) {
-      S.queue[idx] = {...t, ...data.track};
-      updateTrackUI(S.queue[idx]);
-      setupMediaSession(S.queue[idx]);
-    } else {
-      setupMediaSession(t);
-    }
+    if (!data.url) throw new Error('No stream URL returned');
+
+    // Merge returned track metadata back into queue
+    const merged = {
+      ...t,
+      title: data.title || t.title,
+      artist: data.artist || t.artist,
+      thumb: data.thumb || t.thumb,
+      duration: data.duration || t.duration,
+      duration_str: data.duration_str || t.duration_str,
+    };
+    S.queue[idx] = merged;
+    updateTrackUI(merged);
+    setupMediaSession(merged);
 
     audio.src = data.url;
     audio.load();
@@ -484,12 +496,15 @@ async function loadTrack(idx) {
     if (playPromise) {
       playPromise.catch(err => {
         console.warn('Autoplay blocked:', err);
-        hideStreamLoading(); setLoad(false);
+        hideStreamLoading();
+        setLoad(false);
+        toast('Tap ▶ to play','▶');
       });
     }
   } catch(e) {
     console.error('loadTrack error:', e);
-    hideStreamLoading(); setLoad(false);
+    hideStreamLoading();
+    setLoad(false);
     toast('Track unavailable — trying next', '⚠️');
     setTimeout(nextTrack, 1200);
   }
@@ -520,7 +535,8 @@ function toggleMute() { S.muted=!S.muted; audio.volume=S.muted?0:S.vol/100; docu
 function updateTrackUI(t) {
   document.getElementById('npTitle').textContent=t.title;
   document.getElementById('npArtist').textContent=t.artist;
-  const art=document.getElementById('npArt'),loadingEl=document.getElementById('npArtLoading');
+  const art=document.getElementById('npArt');
+  const loadingEl=document.getElementById('npArtLoading');
   art.innerHTML=t.thumb?`<img src="${t.thumb}" onerror="this.style.display='none'">`:'<div class="np-art-emoji">🎵</div>';
   art.appendChild(loadingEl);
   const liked=S.liked.has(t.id);
