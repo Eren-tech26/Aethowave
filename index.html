@@ -469,8 +469,7 @@ async function loadTrack(idx) {
 
   try {
     const data = await apiGet(`/stream/${t.id}`, false);
-    const streamUrl = data.url;
-
+    
     if (data.track) {
       S.queue[idx] = {...t, ...data.track};
       updateTrackUI(S.queue[idx]);
@@ -479,7 +478,7 @@ async function loadTrack(idx) {
       setupMediaSession(t);
     }
 
-    audio.src = streamUrl;
+    audio.src = data.url;
     audio.load();
     const playPromise = audio.play();
     if (playPromise) {
