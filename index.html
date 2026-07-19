@@ -103,7 +103,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .np-header{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
 .np-header-title{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
 .np-chevron{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px}
-.yt-container{width:0;height:0;overflow:hidden;position:absolute;pointer-events:none;opacity:0}
 .np-art{width:100%;max-width:300px;aspect-ratio:1;border-radius:24px;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);transition:box-shadow .5s;position:relative}
 .np-art.playing{box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 80px rgba(123,79,255,.2)}
 .np-art img{width:100%;height:100%;object-fit:cover}
@@ -202,9 +201,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   <div class="splash-bar"><div class="splash-bar-fill"></div></div>
 </div>
 
-<div class="yt-container">
-  <div id="yt-player"></div>
-</div>
+<audio id="audioEl" preload="none"></audio>
 
 <div class="lbar" id="lbar"></div>
 <div class="toasts" id="toasts"></div>
@@ -355,7 +352,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   </div>
 </nav>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
 const API = 'https://aethowave-api.onrender.com';
 
@@ -366,6 +362,57 @@ function enableWakeLock() {
   if (wakeLockEnabled) return;
   noSleep.enable().then(() => { wakeLockEnabled = true; }).catch(() => {});
 }
+
+// ── AUDIO PLAYER ─────────────────────────────────────────
+const audio = document.getElementById('audioEl');
+
+audio.addEventListener('playing', () => {
+  S.playing = true;
+  updatePlayBtns();
+  hideStreamLoading();
+  setLoad(false);
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+});
+
+audio.addEventListener('pause', () => {
+  S.playing = false;
+  updatePlayBtns();
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+});
+
+audio.addEventListener('waiting', () => { setLoad(true); });
+audio.addEventListener('canplay', () => { setLoad(false); });
+
+audio.addEventListener('timeupdate', () => {
+  S.currentTime = audio.currentTime;
+  S.duration = audio.duration || 0;
+  updateProgress();
+  if ('mediaSession' in navigator && S.duration) {
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: S.duration,
+        playbackRate: 1,
+        position: S.currentTime,
+      });
+    } catch(e) {}
+  }
+});
+
+audio.addEventListener('ended', () => {
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
+  onEnded();
+});
+
+audio.addEventListener('error', () => {
+  hideStreamLoading();
+  setLoad(false);
+  toast('Stream error — trying proxy…', '⚠️');
+  const t = S.queue[S.idx];
+  if (t) {
+    audio.src = `${API}/proxy-stream/${t.id}`;
+    audio.play().catch(() => toast('Playback failed', '⚠️'));
+  }
+});
 
 // ── MEDIA SESSION ─────────────────────────────────────────
 function updateMediaSession(t) {
@@ -378,112 +425,13 @@ function updateMediaSession(t) {
       { src: t.thumb, sizes: '512x512', type: 'image/jpeg' },
     ] : [],
   });
-  navigator.mediaSession.setActionHandler('play', () => { if (ytPlayer && ytReady) ytPlayer.playVideo(); });
-  navigator.mediaSession.setActionHandler('pause', () => { if (ytPlayer && ytReady) ytPlayer.pauseVideo(); });
+  navigator.mediaSession.setActionHandler('play', () => audio.play());
+  navigator.mediaSession.setActionHandler('pause', () => audio.pause());
   navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
   navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
   navigator.mediaSession.setActionHandler('seekto', (d) => {
-    if (ytPlayer && d.seekTime != null) ytPlayer.seekTo(d.seekTime, true);
+    if (d.seekTime != null) audio.currentTime = d.seekTime;
   });
-}
-
-// ── YOUTUBE IFRAME PLAYER ─────────────────────────────────
-let ytPlayer = null;
-let ytReady = false;
-let ytPendingId = null;
-
-window.onYouTubeIframeAPIReady = function() {
-  ytPlayer = new YT.Player('yt-player', {
-    height: '1',
-    width: '1',
-    playerVars: {
-      autoplay: 0,
-      controls: 0,
-      disablekb: 1,
-      fs: 0,
-      iv_load_policy: 3,
-      modestbranding: 1,
-      rel: 0,
-    },
-    events: {
-      onReady: (e) => {
-        ytReady = true;
-        e.target.setVolume(S.vol);
-        if (ytPendingId) {
-          e.target.loadVideoById(ytPendingId);
-          ytPendingId = null;
-        }
-      },
-      onStateChange: onYTStateChange,
-      onError: onYTError,
-    }
-  });
-};
-
-function onYTStateChange(e) {
-  const state = e.data;
-  if (state === YT.PlayerState.PLAYING) {
-    S.playing = true;
-    updatePlayBtns();
-    hideStreamLoading();
-    setLoad(false);
-    startProgressTimer();
-    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-  } else if (state === YT.PlayerState.PAUSED) {
-    S.playing = false;
-    updatePlayBtns();
-    stopProgressTimer();
-    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-  } else if (state === YT.PlayerState.BUFFERING) {
-    setLoad(true);
-  } else if (state === YT.PlayerState.ENDED) {
-    stopProgressTimer();
-    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
-    onEnded();
-  } else if (state === YT.PlayerState.CUED) {
-    hideStreamLoading();
-    setLoad(false);
-  }
-}
-
-function onYTError(e) {
-  console.error('YouTube player error:', e.data);
-  hideStreamLoading();
-  setLoad(false);
-  stopProgressTimer();
-  const msg = e.data === 100 ? 'Track not found' :
-               (e.data === 101 || e.data === 150) ? 'Track cannot be embedded' :
-               'Playback error';
-  toast(`${msg} — trying next`, '⚠️');
-  setTimeout(nextTrack, 1000);
-}
-
-let _progressTimer = null;
-function startProgressTimer() {
-  stopProgressTimer();
-  _progressTimer = setInterval(() => {
-    if (!ytPlayer || !S.playing) return;
-    try {
-      S.currentTime = ytPlayer.getCurrentTime() || 0;
-      S.duration = ytPlayer.getDuration() || 0;
-      updateProgress();
-      if ('mediaSession' in navigator && S.duration) {
-        navigator.mediaSession.setPositionState({
-          duration: S.duration,
-          playbackRate: 1,
-          position: S.currentTime,
-        });
-      }
-    } catch(e) {}
-  }, 250);
-}
-function stopProgressTimer() {
-  if (_progressTimer) { clearInterval(_progressTimer); _progressTimer = null; }
-}
-
-function ytPlay(videoId) {
-  if (!ytReady) { ytPendingId = videoId; return; }
-  ytPlayer.loadVideoById(videoId);
 }
 
 // ── STATE ─────────────────────────────────────────────────
@@ -497,8 +445,8 @@ const S = {
 
 // ── API HELPERS ───────────────────────────────────────────
 let serverWoke = false;
-async function apiGet(path, wakingOk = true) {
-  if (!serverWoke && wakingOk) showWakeBanner();
+async function apiGet(path) {
+  if (!serverWoke) showWakeBanner();
   const res = await fetch(`${API}${path}`);
   if (!res.ok) throw new Error(`API ${res.status}`);
   serverWoke = true;
@@ -695,36 +643,54 @@ function playTrackObject(t) {
   nav('np');
 }
 
-function loadTrack(idx) {
+async function loadTrack(idx) {
   if (idx < 0 || idx >= S.queue.length) return;
   const t = S.queue[idx];
   S.idx = idx;
   S.currentTime = 0;
   S.duration = 0;
-  stopProgressTimer();
+  audio.pause();
+  audio.src = '';
+
   updateTrackUI(t);
   showStreamLoading();
   setLoad(true);
   document.getElementById('tab-np').classList.add('has-track');
-  ytPlay(t.id);
+
+  try {
+    const data = await apiGet(`/stream/${t.id}`);
+    audio.src = data.url;
+    audio.volume = S.muted ? 0 : S.vol / 100;
+    await audio.play();
+  } catch(e) {
+    toast('Trying proxy stream…', '⚠️');
+    try {
+      audio.src = `${API}/proxy-stream/${t.id}`;
+      audio.volume = S.muted ? 0 : S.vol / 100;
+      await audio.play();
+    } catch(e2) {
+      hideStreamLoading();
+      setLoad(false);
+      toast('Could not play track', '⚠️');
+    }
+  }
 }
 
 function togglePlay() {
   enableWakeLock();
   if (S.queue.length===0) { goSearch(); return; }
-  if (!ytPlayer || !ytReady) return;
-  if (S.playing) { ytPlayer.pauseVideo(); }
+  if (S.playing) { audio.pause(); }
   else {
     if (S.idx < 0) { loadTrack(0); }
-    else { ytPlayer.playVideo(); }
+    else { audio.play().catch(()=>{}); }
   }
 }
 
 function prevTrack() {
-  if (S.currentTime > 3) { ytPlayer && ytPlayer.seekTo(0, true); return; }
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
   const i = S.shuffle ? rndIdx() : S.idx-1;
   if (i >= 0) loadTrack(i);
-  else { ytPlayer && ytPlayer.seekTo(0, true); }
+  else audio.currentTime = 0;
 }
 
 function nextTrack() {
@@ -734,7 +700,7 @@ function nextTrack() {
 }
 
 function onEnded() {
-  if (S.repeat && S.queue.length===1) { ytPlayer && ytPlayer.seekTo(0,true); ytPlayer.playVideo(); }
+  if (S.repeat && S.queue.length===1) { audio.currentTime=0; audio.play(); }
   else nextTrack();
 }
 
@@ -745,9 +711,9 @@ function rndIdx() {
 }
 
 function seekTo(e) {
-  if (!S.duration || !ytPlayer) return;
+  if (!audio.duration) return;
   const pct = e.offsetX / e.currentTarget.offsetWidth;
-  ytPlayer.seekTo(pct * S.duration, true);
+  audio.currentTime = pct * audio.duration;
 }
 
 function toggleShuffle() {
@@ -779,19 +745,13 @@ function toggleLike() {
 
 function setVol(v) {
   S.vol = +v;
-  if (ytPlayer && ytReady) {
-    if (S.muted) ytPlayer.setVolume(0);
-    else ytPlayer.setVolume(S.vol);
-  }
+  audio.volume = S.muted ? 0 : S.vol / 100;
   document.getElementById('volIcon').textContent = S.vol==0?'🔇':S.vol<30?'🔉':'🔊';
 }
 
 function toggleMute() {
   S.muted = !S.muted;
-  if (ytPlayer && ytReady) {
-    if (S.muted) ytPlayer.mute();
-    else { ytPlayer.unMute(); ytPlayer.setVolume(S.vol); }
-  }
+  audio.volume = S.muted ? 0 : S.vol / 100;
   document.getElementById('volIcon').textContent = S.muted?'🔇':S.vol<30?'🔉':'🔊';
 }
 
