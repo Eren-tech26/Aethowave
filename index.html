@@ -424,10 +424,12 @@ function onYTStateChange(e) {
     hideStreamLoading();
     setLoad(false);
     startProgressTimer();
+    setMediaSessionPlaying(true);
   } else if (state === YT.PlayerState.PAUSED) {
     S.playing = false;
     updatePlayBtns();
     stopProgressTimer();
+    setMediaSessionPlaying(false);
   } else if (state === YT.PlayerState.BUFFERING) {
     setLoad(true);
   } else if (state === YT.PlayerState.ENDED) {
@@ -812,6 +814,7 @@ function updateTrackUI(t) {
   const ma = document.getElementById('miniArt');
   ma.innerHTML = t.thumb?`<img src="${t.thumb}" onerror="this.outerHTML='🎵'">`:'🎵';
   document.getElementById('miniPlayer').classList.add('visible');
+  updateMediaSession(t);
 }
 
 function updatePlayBtns() {
@@ -907,6 +910,90 @@ document.addEventListener('keydown',e=>{
     setTimeout(()=>{splash.style.display='none';},650);
   },2400);
 })();
+
+// ── BACKGROUND KEEPALIVE ─────────────────────────────────
+// Trick: play a silent audio loop via Web Audio API
+// This keeps the audio context alive when the page is backgrounded,
+// which prevents the browser from suspending the YouTube iframe.
+let _audioCtx = null;
+let _silentSource = null;
+
+function initSilentAudio() {
+  try {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Create a 1-second silent buffer and loop it forever
+    const buf = _audioCtx.createBuffer(1, _audioCtx.sampleRate, _audioCtx.sampleRate);
+    _silentSource = _audioCtx.createBufferSource();
+    _silentSource.buffer = buf;
+    _silentSource.loop = true;
+    _silentSource.connect(_audioCtx.destination);
+    _silentSource.start(0);
+  } catch(e) {
+    console.warn('Silent audio keepalive failed:', e);
+  }
+}
+
+// Resume AudioContext on user interaction (required by browsers)
+function resumeAudioCtx() {
+  if (!_audioCtx) {
+    initSilentAudio(); // first interaction — init now
+  } else if (_audioCtx.state === 'suspended') {
+    _audioCtx.resume();
+  }
+}
+document.addEventListener('click', resumeAudioCtx, { once: false });
+document.addEventListener('touchstart', resumeAudioCtx, { once: false });
+
+// Handle page visibility — when coming back from background, nudge the YT player
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // Resume audio context if suspended
+    resumeAudioCtx();
+    // If we were playing before backgrounding, make sure YT is still going
+    if (S.playing && ytPlayer && ytReady) {
+      try {
+        const state = ytPlayer.getPlayerState();
+        // If paused/stopped due to background suspension, resume
+        if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.UNSTARTED) {
+          ytPlayer.playVideo();
+        }
+      } catch(e) {}
+    }
+  }
+});
+
+// ── MEDIA SESSION API ─────────────────────────────────────
+// Registers with the OS so lock screen controls work
+function updateMediaSession(t) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: t.title,
+    artist: t.artist,
+    album: 'AethoWave',
+    artwork: t.thumb ? [
+      { src: t.thumb, sizes: '512x512', type: 'image/jpeg' }
+    ] : [],
+  });
+
+  navigator.mediaSession.setActionHandler('play', () => {
+    ytPlayer && ytPlayer.playVideo();
+  });
+  navigator.mediaSession.setActionHandler('pause', () => {
+    ytPlayer && ytPlayer.pauseVideo();
+  });
+  navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
+  navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+  navigator.mediaSession.setActionHandler('seekto', (details) => {
+    if (ytPlayer && details.seekTime != null) {
+      ytPlayer.seekTo(details.seekTime, true);
+    }
+  });
+}
+
+function setMediaSessionPlaying(playing) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+}
 
 // ── INIT ─────────────────────────────────────────────────
 renderHome();
