@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>AethoWave</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -195,7 +197,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 
 <div class="lbar" id="lbar"></div>
 <div class="toasts" id="toasts"></div>
-<audio id="audioEl" preload="metadata" playsinline></audio>
+<audio id="audioEl" preload="metadata" playsinline webkit-playsinline x-webkit-airplay="allow"></audio>
 
 <div class="app">
   <div class="topbar">
@@ -307,7 +309,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 <script>
 const API = 'https://aethowave-api.onrender.com';
 
-// ── STATE ─────────────────────────────────────────────────
 const S = {
   queue:[], idx:-1, playing:false,
   shuffle:false, repeat:false,
@@ -316,10 +317,13 @@ const S = {
   duration:0, currentTime:0,
 };
 
-// ── AUDIO ELEMENT ─────────────────────────────────────────
-// Real <audio> tag = OS treats it as a real media player = background playback works
 const audio = document.getElementById('audioEl');
 audio.volume = S.vol / 100;
+
+// ── BACKGROUND PLAYBACK FIXES ─────────────────────────────
+// Block browser from pausing when tab hidden or phone locked
+document.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
+document.addEventListener('pagehide', (e) => e.stopImmediatePropagation(), true);
 
 audio.addEventListener('loadedmetadata', () => { S.duration = audio.duration || 0; updateProgress(); });
 audio.addEventListener('timeupdate', () => { S.currentTime = audio.currentTime || 0; updateProgress(); updateMediaSessionPosition(); });
@@ -342,7 +346,11 @@ function setupMediaSession(t) {
     title: t.title,
     artist: t.artist,
     album: 'AethoWave',
-    artwork: t.thumb ? [{src: t.thumb, sizes:'512x512', type:'image/jpeg'}] : [],
+    artwork: t.thumb ? [
+      { src: t.thumb, sizes: '96x96',   type: 'image/jpeg' },
+      { src: t.thumb, sizes: '256x256', type: 'image/jpeg' },
+      { src: t.thumb, sizes: '512x512', type: 'image/jpeg' },
+    ] : [],
   });
   navigator.mediaSession.setActionHandler('play', () => audio.play());
   navigator.mediaSession.setActionHandler('pause', () => audio.pause());
@@ -354,9 +362,7 @@ function setupMediaSession(t) {
 }
 function updateMediaSessionPosition() {
   if (!('mediaSession' in navigator) || !S.duration) return;
-  try {
-    navigator.mediaSession.setPositionState({ duration: S.duration, playbackRate: 1, position: S.currentTime });
-  } catch(e) {}
+  try { navigator.mediaSession.setPositionState({ duration: S.duration, playbackRate: 1, position: S.currentTime }); } catch(e) {}
 }
 
 // ── API ───────────────────────────────────────────────────
@@ -432,6 +438,7 @@ function tCard(t) {
   return `<div class="tcard" onclick='playTrackObject(${trackJSON(t)})'><div class="tcard-art"><img src="${t.thumb}" onerror="this.style.display='none'" loading="lazy"><div class="tcard-art-icon">🎵</div><div class="tcard-play-btn">▶</div></div><div class="tcard-name">${esc(t.title)}</div><div class="tcard-artist">${esc(t.artist)}</div>${t.duration_str?`<div class="tcard-dur">${t.duration_str}</div>`:''}</div>`;
 }
 function trackJSON(t) { return JSON.stringify({id:t.id,title:t.title,artist:t.artist,thumb:t.thumb,duration_str:t.duration_str||''}).replace(/"/g,'&quot;'); }
+
 async function playFeatured() {
   toast('Loading trending hits…','🔥');
   try { const data=await apiGet('/trending?genre=pop&limit=10'); if(!data.results.length){toast('No tracks found','⚠️');return;} S.queue=data.results;S.idx=0;loadTrack(0);nav('np'); } catch(e){toast('Could not load','⚠️');}
@@ -479,36 +486,16 @@ async function loadTrack(idx) {
   showStreamLoading(); setLoad(true);
   document.getElementById('tab-np').classList.add('has-track');
 
-  try {
-    // Get stream URL from Piped via our backend
-    const data = await apiGet(`/stream/${t.id}`, false);
-    const streamUrl = data.url;
+  // Set media session BEFORE play so lock screen controls appear immediately
+  setupMediaSession(t);
 
-    // Update track metadata if Piped returned richer info
-    if (data.track) {
-      S.queue[idx] = {...t, ...data.track};
-      updateTrackUI(S.queue[idx]);
-      setupMediaSession(S.queue[idx]);
-    } else {
-      setupMediaSession(t);
-    }
-
-    audio.src = streamUrl;
-    audio.load();
-    const playPromise = audio.play();
-    if (playPromise) {
-      playPromise.catch(err => {
-        console.warn('Autoplay blocked:', err);
-        // Don't toast — user can tap play. Browser policy.
-        hideStreamLoading(); setLoad(false);
-      });
-    }
-  } catch(e) {
-    console.error('loadTrack error:', e);
+  // Backend proxies the audio — no CORS, background playback works
+  audio.src = API + '/stream/' + t.id;
+  audio.load();
+  audio.play().catch(err => {
+    console.warn('Autoplay blocked:', err);
     hideStreamLoading(); setLoad(false);
-    toast('Track unavailable — trying next', '⚠️');
-    setTimeout(nextTrack, 1200);
-  }
+  });
 }
 
 function togglePlay() {
