@@ -469,7 +469,7 @@ async function loadTrack(idx) {
 
   try {
     const data = await apiGet(`/stream/${t.id}`, false);
-    
+
     if (data.track) {
       S.queue[idx] = {...t, ...data.track};
       updateTrackUI(S.queue[idx]);
