@@ -1,11 +1,6 @@
-"""
-AethoWave Backend v3 — FastAPI
-Uses Piped API for stream URLs (no yt-dlp bot detection issues)
-+ yt-dlp flat search for metadata only
-"""
-
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import yt_dlp
 import httpx
 import asyncio
@@ -23,7 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Multiple Piped instances for fallback
 PIPED_INSTANCES = [
     "https://pipedapi.kavin.rocks",
     "https://piped-api.privacy.com.de",
@@ -90,9 +84,8 @@ async def yt_search(query: str, limit: int) -> list:
     return results
 
 async def get_stream_from_piped(video_id: str) -> dict:
-    """Try each Piped instance until one works."""
     instances = PIPED_INSTANCES.copy()
-    random.shuffle(instances)  # spread load
+    random.shuffle(instances)
 
     async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
         for base in instances:
@@ -101,21 +94,19 @@ async def get_stream_from_piped(video_id: str) -> dict:
                 r = await client.get(url, headers={
                     "User-Agent": "Mozilla/5.0",
                     "Accept": "application/json",
+                    "Referer": base + "/",
                 })
                 if r.status_code != 200:
                     continue
                 data = r.json()
 
-                # Pick best audio stream
                 audio_streams = data.get("audioStreams", [])
                 if not audio_streams:
                     continue
 
-                # Sort by bitrate descending, prefer opus/m4a
                 audio_streams.sort(key=lambda x: x.get("bitrate", 0), reverse=True)
                 best = audio_streams[0]
 
-                # Build track metadata from Piped response
                 track = {
                     "id": video_id,
                     "title": data.get("title", "Unknown"),
@@ -183,10 +174,6 @@ async def trending(genre: str = Query("music", max_length=50), limit: int = Quer
 
 @app.get("/stream/{video_id}")
 async def stream(video_id: str):
-    """
-    Get audio stream URL via Piped (no yt-dlp extraction, no bot detection).
-    Returns { url, track, mime_type }
-    """
     try:
         result = await get_stream_from_piped(video_id)
         return result
@@ -194,4 +181,30 @@ async def stream(video_id: str):
         raise
     except Exception as e:
         logger.error(f"Stream error for {video_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/proxy/{video_id}")
+async def proxy_stream(video_id: str):
+    try:
+        result = await get_stream_from_piped(video_id)
+        stream_url = result["url"]
+        mime = result.get("mime_type", "audio/webm")
+
+        async def generate():
+            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+                async with client.stream("GET", stream_url, headers={
+                    "User-Agent": "Mozilla/5.0",
+                    "Referer": "https://piped.video/"
+                }) as r:
+                    async for chunk in r.aiter_bytes(8192):
+                        yield chunk
+
+        return StreamingResponse(generate(), media_type=mime, headers={
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "no-cache"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Proxy error for {video_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
