@@ -1,20 +1,20 @@
 """
-AethoWave Backend v3 — FastAPI
-Uses Piped API for stream URLs (no yt-dlp bot detection issues)
-+ yt-dlp flat search for metadata only
+AethoWave Backend v4 — FastAPI
+yt-dlp for search + stream, proxied through backend to fix CORS
 """
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import yt_dlp
 import httpx
 import asyncio
-import os, json, logging, random
+import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="AethoWave API", version="3.0.0")
+app = FastAPI(title="AethoWave API", version="4.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,26 +23,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Multiple Piped instances for fallback
-PIPED_INSTANCES = [
-    "https://pipedapi.kavin.rocks",
-    "https://piped-api.privacy.com.de",
-    "https://api.piped.projectsegfau.lt",
-    "https://pipedapi.syncpundit.io",
-    "https://piped.video/api",
-]
-
-YDL_OPTS = {
+YDL_SEARCH_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "extract_flat": True,
     "skip_download": True,
     "http_headers": {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/125.0.0.0 Safari/537.36"
-        ),
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    },
+}
+
+YDL_STREAM_OPTS = {
+    "quiet": True,
+    "no_warnings": True,
+    "skip_download": True,
+    "format": "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio",
+    "http_headers": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     },
 }
 
@@ -75,7 +72,7 @@ def format_track(e: dict) -> dict:
 async def yt_search(query: str, limit: int) -> list:
     loop = asyncio.get_running_loop()
     def _run():
-        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
+        with yt_dlp.YoutubeDL(YDL_SEARCH_OPTS) as ydl:
             info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
             return (info or {}).get("entries", [])
     entries = await loop.run_in_executor(None, _run)
@@ -89,58 +86,40 @@ async def yt_search(query: str, limit: int) -> list:
         results.append(format_track(e))
     return results
 
-async def get_stream_from_piped(video_id: str) -> dict:
-    """Try each Piped instance until one works."""
-    instances = PIPED_INSTANCES.copy()
-    random.shuffle(instances)  # spread load
-
-    async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
-        for base in instances:
-            try:
-                url = f"{base}/streams/{video_id}"
-                r = await client.get(url, headers={
-                    "User-Agent": "Mozilla/5.0",
-                    "Accept": "application/json",
-                })
-                if r.status_code != 200:
-                    continue
-                data = r.json()
-
-                # Pick best audio stream
-                audio_streams = data.get("audioStreams", [])
-                if not audio_streams:
-                    continue
-
-                # Sort by bitrate descending, prefer opus/m4a
-                audio_streams.sort(key=lambda x: x.get("bitrate", 0), reverse=True)
-                best = audio_streams[0]
-
-                # Build track metadata from Piped response
-                track = {
+async def get_audio_url(video_id: str) -> dict:
+    loop = asyncio.get_running_loop()
+    def _run():
+        with yt_dlp.YoutubeDL(YDL_STREAM_OPTS) as ydl:
+            info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
+            if not info:
+                raise Exception("No info returned")
+            formats = info.get("formats", [])
+            audio_formats = [f for f in formats if f.get("acodec") != "none" and f.get("vcodec") == "none"]
+            if not audio_formats:
+                audio_formats = [f for f in formats if f.get("acodec") != "none"]
+            if not audio_formats:
+                raise Exception("No audio format found")
+            best = sorted(audio_formats, key=lambda f: f.get("abr") or f.get("tbr") or 0, reverse=True)[0]
+            artist = info.get("uploader") or info.get("channel") or "Unknown"
+            if artist.endswith(" - Topic"):
+                artist = artist[:-8]
+            return {
+                "url": best["url"],
+                "mime_type": best.get("ext", "webm"),
+                "track": {
                     "id": video_id,
-                    "title": data.get("title", "Unknown"),
-                    "artist": data.get("uploader", "Unknown"),
-                    "thumb": data.get("thumbnailUrl") or f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
-                    "duration": data.get("duration", 0),
-                    "duration_str": fmt_dur(data.get("duration", 0)),
+                    "title": info.get("title", "Unknown"),
+                    "artist": artist,
+                    "thumb": info.get("thumbnail") or f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
+                    "duration": info.get("duration", 0),
+                    "duration_str": fmt_dur(info.get("duration", 0)),
                 }
-
-                return {
-                    "url": best["url"],
-                    "mime_type": best.get("mimeType", "audio/webm"),
-                    "bitrate": best.get("bitrate", 0),
-                    "track": track,
-                    "instance": base,
-                }
-            except Exception as e:
-                logger.warning(f"Piped instance {base} failed: {e}")
-                continue
-
-    raise HTTPException(status_code=502, detail="All Piped instances failed")
+            }
+    return await loop.run_in_executor(None, _run)
 
 @app.get("/")
 async def root():
-    return {"status": "AethoWave API v3 online", "version": "3.0.0"}
+    return {"status": "AethoWave API v4 online", "version": "4.0.0"}
 
 @app.get("/health")
 async def health():
@@ -183,15 +162,30 @@ async def trending(genre: str = Query("music", max_length=50), limit: int = Quer
 
 @app.get("/stream/{video_id}")
 async def stream(video_id: str):
-    """
-    Get audio stream URL via Piped (no yt-dlp extraction, no bot detection).
-    Returns { url, track, mime_type }
-    """
     try:
-        result = await get_stream_from_piped(video_id)
-        return result
-    except HTTPException:
-        raise
+        data = await get_audio_url(video_id)
+        audio_url = data["url"]
+        track = data["track"]
+        mime = data.get("mime_type", "webm")
+
+        async def stream_audio():
+            async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
+                async with client.stream("GET", audio_url, headers={"User-Agent": "Mozilla/5.0", "Range": "bytes=0-"}) as r:
+                    async for chunk in r.aiter_bytes(chunk_size=65536):
+                        yield chunk
+
+        return StreamingResponse(
+            stream_audio(),
+            media_type=f"audio/{mime}",
+            headers={
+                "X-Track-Title": track["title"],
+                "X-Track-Artist": track["artist"],
+                "X-Track-Thumb": track["thumb"],
+                "X-Track-Duration": str(track["duration"]),
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "no-cache",
+            }
+        )
     except Exception as e:
         logger.error(f"Stream error for {video_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
