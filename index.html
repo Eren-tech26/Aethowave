@@ -22,11 +22,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .tb-logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .waveform{display:flex;align-items:center;gap:2px;height:18px}
 .wb{width:2.5px;border-radius:2px;background:linear-gradient(to top,var(--purple),var(--pink));animation:wv 1.3s ease-in-out infinite}
-.wb:nth-child(1){height:5px;animation-delay:0s}
-.wb:nth-child(2){height:11px;animation-delay:0.1s}
-.wb:nth-child(3){height:18px;animation-delay:0.2s}
-.wb:nth-child(4){height:9px;animation-delay:0.3s}
-.wb:nth-child(5){height:6px;animation-delay:0.4s}
+.wb:nth-child(1){height:5px;animation-delay:0s}.wb:nth-child(2){height:11px;animation-delay:0.1s}.wb:nth-child(3){height:18px;animation-delay:0.2s}.wb:nth-child(4){height:9px;animation-delay:0.3s}.wb:nth-child(5){height:6px;animation-delay:0.4s}
 @keyframes wv{0%,100%{transform:scaleY(0.35)}50%{transform:scaleY(1)}}
 .tb-right{display:flex;align-items:center;gap:10px}
 .tb-search-btn{display:flex;align-items:center;gap:6px;background:var(--glass2);border:1px solid var(--gb);border-radius:50px;padding:8px 14px;color:var(--text2);font-size:13px;cursor:pointer}
@@ -51,10 +47,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .feat-sub{color:rgba(255,255,255,.55);font-size:12px;margin-top:4px}
 .feat-play{position:absolute;top:50%;right:20px;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
 .sec{margin-bottom:28px}
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .sec-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
 .sec-all{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif}
-.hrow{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;padding-left:0;padding-right:16px;-webkit-overflow-scrolling:touch}
+.hrow{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;padding-right:16px;-webkit-overflow-scrolling:touch}
 .rcard{flex-shrink:0;width:160px;display:flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--gb);border-radius:14px;padding:10px;cursor:pointer}
 .rcard-art{width:40px;height:40px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;background:var(--bg3)}
 .rcard-art img{width:100%;height:100%;object-fit:cover;border-radius:9px}
@@ -71,7 +67,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .tcard-dur{font-size:10px;color:var(--text3);margin-top:1px}
 .pcard{flex-shrink:0;width:150px;cursor:pointer}
 .pcard-art{width:150px;height:150px;border-radius:16px;background:var(--bg3);margin-bottom:8px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:44px}
-.pcard-art img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .pcard-play-btn{position:absolute;bottom:8px;right:8px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;z-index:2}
 .pcard:active .pcard-play-btn,.pcard:hover .pcard-play-btn{opacity:1}
 .pcard-name{font-size:13px;font-weight:600}
@@ -88,7 +83,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .search-icon{color:var(--text3);font-size:16px;flex-shrink:0}
 .clear-btn{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px}
 .sresults{display:flex;flex-direction:column;gap:2px}
-.sresult{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.sresult{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;cursor:pointer;transition:background .15s}
 .sresult:active,.sresult:hover{background:var(--glass)}
 .sresult-art{width:48px;height:48px;border-radius:10px;flex-shrink:0;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px}
 .sresult-art img{width:100%;height:100%;object-fit:cover}
@@ -103,11 +98,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .search-empty{text-align:center;padding:48px 20px}
 .search-empty-icon{font-size:44px;margin-bottom:12px;opacity:.4}
 .search-empty p{color:var(--text3);font-size:13px}
+
+/* NOW PLAYING */
 .np-content{padding:0 20px;display:flex;flex-direction:column;align-items:center}
 .np-header{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
 .np-header-title{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
 .np-chevron{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px}
-.np-art{width:100%;max-width:300px;aspect-ratio:1;border-radius:24px;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:28px;box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);transition:box-shadow .5s;position:relative}
+/* YouTube IFrame container — hidden but functional */
+.yt-container{width:0;height:0;overflow:hidden;position:absolute;pointer-events:none;opacity:0}
+.np-art{width:100%;max-width:300px;aspect-ratio:1;border-radius:24px;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);transition:box-shadow .5s;position:relative}
 .np-art.playing{box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 80px rgba(123,79,255,.2)}
 .np-art img{width:100%;height:100%;object-fit:cover}
 .np-art-emoji{position:absolute;font-size:72px}
@@ -121,8 +120,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .np-like{background:none;border:none;color:var(--text3);font-size:24px;cursor:pointer;padding:8px;flex-shrink:0;transition:all .2s}
 .np-like.liked{color:var(--pink)}
 .np-prog{width:100%;margin-bottom:20px}
-.np-bar{width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;margin-bottom:8px;position:relative}
-.np-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));border-radius:2px;width:0%;pointer-events:none;transition:width .1s}
+.np-bar{width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;margin-bottom:8px;position:relative;touch-action:none}
+.np-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));border-radius:2px;width:0%;pointer-events:none;transition:width .25s linear}
 .np-times{display:flex;justify-content:space-between;font-size:11px;color:var(--text3)}
 .np-controls{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:24px}
 .np-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:10px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .18s}
@@ -134,6 +133,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .vol-icon{font-size:16px;color:var(--text3);cursor:pointer;flex-shrink:0}
 .vol-slider{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.12);outline:none;cursor:pointer}
 .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+
+/* LIBRARY */
 .lib-content{padding:0 16px}
 .lib-tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px}
 .lib-tab{padding:7px 16px;border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--gb);background:var(--glass);color:var(--text2);white-space:nowrap;transition:all .18s;flex-shrink:0}
@@ -151,6 +152,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .liked-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .liked-artist{font-size:11px;color:var(--text3);margin-top:2px}
 .liked-more{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:6px}
+
+/* MINI PLAYER */
 .mini-player{position:fixed;bottom:86px;left:12px;right:12px;background:rgba(28,28,30,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid var(--gb2);border-radius:16px;padding:12px 14px;display:none;align-items:center;gap:12px;z-index:95;cursor:pointer;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 .mini-player.visible{display:flex}
 .mini-art{width:42px;height:42px;border-radius:10px;flex-shrink:0;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px}
@@ -162,8 +165,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .mini-btn{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center}
 .mini-play{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .mini-prog{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.08);border-radius:0 0 16px 16px;overflow:hidden}
-.mini-prog-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));width:0%;transition:width .1s}
-.dock{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;background:rgba(18,18,20,0.88);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:8px 8px;z-index:100;box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 0 0.5px rgba(255,255,255,.04);width:calc(100% - 32px);max-width:400px}
+.mini-prog-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));width:0%;transition:width .25s linear}
+
+/* DOCK */
+.dock{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;background:rgba(18,18,20,0.88);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:8px 8px;z-index:100;box-shadow:0 16px 48px rgba(0,0,0,.6);width:calc(100% - 32px);max-width:400px}
 .dock-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:40px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:600;letter-spacing:.2px;transition:all .2s;position:relative}
 .dock-item svg{width:22px;height:22px;transition:all .2s}
 .dock-item.active{color:#fff}
@@ -171,6 +176,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .dock-item.now-playing-tab{background:linear-gradient(135deg,rgba(123,79,255,.25),rgba(255,79,154,.15));border:1px solid rgba(123,79,255,.3);border-radius:40px}
 .dock-pip{width:4px;height:4px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));position:absolute;top:6px;right:14px;display:none}
 .dock-item.has-track .dock-pip{display:block}
+
+/* TOASTS */
 .toasts{position:fixed;top:60px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:500;pointer-events:none;width:calc(100% - 32px);max-width:360px}
 .toast{background:rgba(28,28,30,.95);backdrop-filter:blur(20px);border:1px solid var(--gb);border-radius:14px;padding:12px 16px;font-size:13px;font-weight:500;color:#fff;display:flex;align-items:center;gap:10px;animation:tin .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 @keyframes tin{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -179,7 +186,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .lbar.on{display:block;animation:lb 1.8s ease-in-out infinite}
 @keyframes lb{0%{transform:scaleX(0);transform-origin:left}49%{transform:scaleX(1);transform-origin:left}50%{transform-origin:right}100%{transform:scaleX(0);transform-origin:right}}
 
-/* ── SPLASH SCREEN ─────────────────────────────────────── */
+/* SPLASH */
 #splash{position:fixed;inset:0;z-index:9999;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;pointer-events:none}
 #splash.hide{animation:splashOut .6s cubic-bezier(.7,0,.3,1) forwards}
 @keyframes splashOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
@@ -188,7 +195,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .splash-wave{display:flex;align-items:center;gap:5px;height:64px;position:relative;z-index:1}
 .sw{width:5px;border-radius:4px;background:linear-gradient(to top,var(--purple),var(--pink));animation:swAnim 1s ease-in-out infinite;opacity:0;animation-fill-mode:forwards}
 .sw:nth-child(1){animation-delay:.0s;--h:18px}.sw:nth-child(2){animation-delay:.07s;--h:32px}.sw:nth-child(3){animation-delay:.14s;--h:52px}.sw:nth-child(4){animation-delay:.21s;--h:64px}.sw:nth-child(5){animation-delay:.28s;--h:44px}.sw:nth-child(6){animation-delay:.35s;--h:56px}.sw:nth-child(7){animation-delay:.42s;--h:36px}.sw:nth-child(8){animation-delay:.49s;--h:24px}.sw:nth-child(9){animation-delay:.56s;--h:40px}.sw:nth-child(10){animation-delay:.63s;--h:28px}.sw:nth-child(11){animation-delay:.70s;--h:48px}.sw:nth-child(12){animation-delay:.77s;--h:20px}
-@keyframes swAnim{0%{height:4px;opacity:0}30%{opacity:1;height:var(--h)}60%{height:calc(var(--h) * .45)}80%{height:var(--h)}100%{height:calc(var(--h) * .6);opacity:1}}
+@keyframes swAnim{0%{height:4px;opacity:0}30%{opacity:1;height:var(--h)}60%{height:calc(var(--h)*.45)}80%{height:var(--h)}100%{height:calc(var(--h)*.6);opacity:1}}
 .splash-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:32px;letter-spacing:-1px;background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.6) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;transform:translateY(10px);animation:logoIn .5s cubic-bezier(.2,.8,.3,1) .9s forwards;position:relative;z-index:1}
 @keyframes logoIn{to{opacity:1;transform:translateY(0)}}
 .splash-tag{font-size:12px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3);opacity:0;animation:logoIn .4s ease 1.2s forwards;position:relative;z-index:1}
@@ -199,23 +206,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
+<!-- SPLASH -->
 <div id="splash">
   <div class="splash-orb"></div>
-  <div class="splash-wave">
-    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
-    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
-    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
-    <div class="sw"></div><div class="sw"></div><div class="sw"></div>
-  </div>
+  <div class="splash-wave"><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div></div>
   <div class="splash-logo">AethoWave</div>
   <div class="splash-tag">Feel Every Beat</div>
   <div class="splash-bar"><div class="splash-bar-fill"></div></div>
 </div>
 
+<!-- Hidden YouTube IFrame player -->
+<div class="yt-container">
+  <div id="yt-player"></div>
+</div>
+
 <div class="lbar" id="lbar"></div>
 <div class="toasts" id="toasts"></div>
-<audio id="audioEl" preload="metadata"></audio>
 
 <div class="app">
   <div class="topbar">
@@ -231,14 +237,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       <div class="avatar">A</div>
     </div>
   </div>
-
   <div class="wake-banner" id="wakeBanner">
     <div class="wake-dot"></div>
-    <span>Waking up music server… first request may take 30s on free tier</span>
+    <span>Waking up music server… may take 30s on free tier</span>
   </div>
 
   <div class="pages">
-
+    <!-- NOW PLAYING -->
     <div class="page" id="page-np">
       <div class="np-content">
         <div class="np-header">
@@ -246,7 +251,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
           <button class="np-chevron" onclick="nav('home')">⌄</button>
         </div>
         <div class="np-art" id="npArt">
-          <div class="np-art-emoji">🎵</div>
+          <div class="np-art-emoji" id="npEmoji">🎵</div>
           <div class="np-art-loading" id="npArtLoading"><div class="spin"></div></div>
         </div>
         <div class="np-track">
@@ -260,10 +265,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
           <div class="np-bar" id="npBar" onclick="seekTo(event)">
             <div class="np-fill" id="npFill"></div>
           </div>
-          <div class="np-times">
-            <span id="npCur">0:00</span>
-            <span id="npDur">0:00</span>
-          </div>
+          <div class="np-times"><span id="npCur">0:00</span><span id="npDur">0:00</span></div>
         </div>
         <div class="np-controls">
           <button class="np-btn" id="npShuffle" onclick="toggleShuffle()">
@@ -287,6 +289,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       </div>
     </div>
 
+    <!-- HOME -->
     <div class="page active" id="page-home">
       <div class="home-content">
         <div class="greeting">
@@ -294,8 +297,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
           <div class="greeting-s">What are we vibing to?</div>
         </div>
         <div class="featured" onclick="playFeatured()">
-          <div class="feat-glow"></div>
-          <div class="feat-over"></div>
+          <div class="feat-glow"></div><div class="feat-over"></div>
           <div class="feat-body">
             <div class="feat-badge">▶ Featured</div>
             <div class="feat-title">Tonight's Top Hits</div>
@@ -303,28 +305,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
           </div>
           <div class="feat-play">▶</div>
         </div>
-        <div class="sec">
-          <div class="sec-hdr"><div class="sec-title">Recently Played</div></div>
-          <div class="hrow" id="recentRow"></div>
-        </div>
-        <div class="sec">
-          <div class="sec-hdr">
-            <div class="sec-title">🔥 Trending</div>
-            <button class="sec-all" onclick="goSearch()">See all</button>
-          </div>
-          <div class="hrow" id="trendRow"></div>
-        </div>
-        <div class="sec">
-          <div class="sec-hdr"><div class="sec-title">Popular Playlists</div></div>
-          <div class="hrow" id="plRow"></div>
-        </div>
-        <div class="sec">
-          <div class="sec-hdr"><div class="sec-title">Browse Genres</div></div>
-          <div class="genre-grid" id="genreGrid"></div>
-        </div>
+        <div class="sec"><div class="sec-hdr"><div class="sec-title">Recently Played</div></div><div class="hrow" id="recentRow"></div></div>
+        <div class="sec"><div class="sec-hdr"><div class="sec-title">🔥 Trending</div><button class="sec-all" onclick="goSearch()">See all</button></div><div class="hrow" id="trendRow"></div></div>
+        <div class="sec"><div class="sec-hdr"><div class="sec-title">Popular Playlists</div></div><div class="hrow" id="plRow"></div></div>
+        <div class="sec"><div class="sec-hdr"><div class="sec-title">Browse Genres</div></div><div class="genre-grid" id="genreGrid"></div></div>
       </div>
     </div>
 
+    <!-- SEARCH -->
     <div class="page" id="page-search">
       <div class="search-content">
         <div class="search-box">
@@ -339,6 +327,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       </div>
     </div>
 
+    <!-- LIBRARY -->
     <div class="page" id="page-lib">
       <div class="lib-content">
         <div class="greeting"><div class="greeting-h">Library</div></div>
@@ -350,35 +339,29 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
         <div id="libBody"></div>
       </div>
     </div>
-
   </div>
 </div>
 
+<!-- MINI PLAYER -->
 <div class="mini-player" id="miniPlayer" onclick="nav('np')">
   <div class="mini-art" id="miniArt">🎵</div>
-  <div class="mini-info">
-    <div class="mini-name" id="miniName">No track</div>
-    <div class="mini-artist" id="miniArtist">—</div>
-  </div>
+  <div class="mini-info"><div class="mini-name" id="miniName">No track</div><div class="mini-artist" id="miniArtist">—</div></div>
   <div class="mini-controls" onclick="event.stopPropagation()">
-    <button class="mini-btn" onclick="prevTrack()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-    </button>
+    <button class="mini-btn" onclick="prevTrack()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
     <button class="mini-play" id="miniPlayBtn" onclick="togglePlay()">▶</button>
-    <button class="mini-btn" onclick="nextTrack()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-    </button>
+    <button class="mini-btn" onclick="nextTrack()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
   </div>
   <div class="mini-prog"><div class="mini-prog-fill" id="miniPFill"></div></div>
 </div>
 
+<!-- DOCK -->
 <nav class="dock">
-  <div class="dock-item now-playing-tab active has-track" id="tab-np" onclick="nav('np')">
+  <div class="dock-item now-playing-tab" id="tab-np" onclick="nav('np')">
     <div class="dock-pip"></div>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
     Now Playing
   </div>
-  <div class="dock-item" id="tab-home" onclick="nav('home')">
+  <div class="dock-item active" id="tab-home" onclick="nav('home')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Home
   </div>
@@ -392,9 +375,108 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   </div>
 </nav>
 
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
 // ── CONFIG ────────────────────────────────────────────────
 const API = 'https://aethowave-api.onrender.com';
+
+// ── YOUTUBE IFRAME PLAYER ─────────────────────────────────
+let ytPlayer = null;
+let ytReady = false;
+let ytPendingId = null;  // video ID to play once player is ready
+
+// Called automatically by YouTube API when script loads
+window.onYouTubeIframeAPIReady = function() {
+  ytPlayer = new YT.Player('yt-player', {
+    height: '1',
+    width: '1',
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      disablekb: 1,
+      fs: 0,
+      iv_load_policy: 3,
+      modestbranding: 1,
+      rel: 0,
+    },
+    events: {
+      onReady: (e) => {
+        ytReady = true;
+        e.target.setVolume(S.vol);
+        if (ytPendingId) {
+          e.target.loadVideoById(ytPendingId);
+          ytPendingId = null;
+        }
+      },
+      onStateChange: onYTStateChange,
+      onError: onYTError,
+    }
+  });
+};
+
+// YT player states: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 video cued
+function onYTStateChange(e) {
+  const state = e.data;
+  if (state === YT.PlayerState.PLAYING) {
+    S.playing = true;
+    updatePlayBtns();
+    hideStreamLoading();
+    setLoad(false);
+    startProgressTimer();
+  } else if (state === YT.PlayerState.PAUSED) {
+    S.playing = false;
+    updatePlayBtns();
+    stopProgressTimer();
+  } else if (state === YT.PlayerState.BUFFERING) {
+    setLoad(true);
+  } else if (state === YT.PlayerState.ENDED) {
+    stopProgressTimer();
+    onEnded();
+  } else if (state === YT.PlayerState.CUED) {
+    // Video cued but not started
+    hideStreamLoading();
+    setLoad(false);
+  }
+}
+
+function onYTError(e) {
+  // Error codes: 2=invalid param, 5=HTML5 error, 100=not found, 101/150=embedding not allowed
+  console.error('YouTube player error:', e.data);
+  hideStreamLoading();
+  setLoad(false);
+  stopProgressTimer();
+  const msg = e.data === 100 ? 'Track not found' :
+               (e.data === 101 || e.data === 150) ? 'Track cannot be embedded' :
+               'Playback error';
+  toast(`${msg} — trying next`, '⚠️');
+  setTimeout(nextTrack, 1000);
+}
+
+// Progress polling (YouTube IFrame API has no timeupdate event)
+let _progressTimer = null;
+function startProgressTimer() {
+  stopProgressTimer();
+  _progressTimer = setInterval(() => {
+    if (!ytPlayer || !S.playing) return;
+    try {
+      S.currentTime = ytPlayer.getCurrentTime() || 0;
+      S.duration = ytPlayer.getDuration() || 0;
+      updateProgress();
+    } catch(e) {}
+  }, 250);
+}
+function stopProgressTimer() {
+  if (_progressTimer) { clearInterval(_progressTimer); _progressTimer = null; }
+}
+
+function ytPlay(videoId) {
+  if (!ytReady) {
+    ytPendingId = videoId;
+    return;
+  }
+  ytPlayer.loadVideoById(videoId);
+}
 
 // ── STATE ──────────────────────────────────────────────────
 const S = {
@@ -403,126 +485,72 @@ const S = {
   liked:new Set(), history:[],
   vol:80, muted:false,
   duration:0, currentTime:0,
-  loadingStream: false,
-  retrying: false,
 };
-
-const audio = document.getElementById('audioEl');
-audio.volume = S.vol / 100;
-audio.crossOrigin = 'anonymous';
-
-audio.addEventListener('loadedmetadata', () => { S.duration = audio.duration || 0; updateProgress(); });
-audio.addEventListener('timeupdate', () => { S.currentTime = audio.currentTime || 0; updateProgress(); });
-audio.addEventListener('play', () => { S.playing = true; updatePlayBtns(); setLoad(false); hideStreamLoading(); });
-audio.addEventListener('pause', () => { S.playing = false; updatePlayBtns(); });
-audio.addEventListener('waiting', () => setLoad(true));
-audio.addEventListener('canplay', () => { setLoad(false); hideStreamLoading(); });
-audio.addEventListener('ended', onEnded);
-audio.addEventListener('error', onAudioError);
-
-// ── AUDIO ERROR HANDLER with proxy fallback ───────────────
-async function onAudioError(e) {
-  const t = S.queue[S.idx];
-  if (!t) return;
-
-  // If we haven't tried the proxy yet, retry via proxy-stream
-  if (!S.retrying && t.proxy_url) {
-    S.retrying = true;
-    console.warn('Direct URL failed, retrying via proxy…', e);
-    const proxyUrl = API + t.proxy_url;
-    audio.src = proxyUrl;
-    audio.load();
-    audio.play().catch(err => {
-      console.error('Proxy play also failed:', err);
-      S.retrying = false;
-      hideStreamLoading();
-      setLoad(false);
-      toast('Track unavailable — trying next…', '⚠️');
-      setTimeout(nextTrack, 1200);
-    });
-    return;
-  }
-
-  // Both direct and proxy failed — skip
-  S.retrying = false;
-  console.error('Audio error (gave up):', e);
-  hideStreamLoading();
-  setLoad(false);
-  toast('Track unavailable — trying next…', '⚠️');
-  setTimeout(nextTrack, 1200);
-}
 
 // ── API HELPERS ───────────────────────────────────────────
 let serverWoke = false;
-
 async function apiGet(path, wakingOk = true) {
   if (!serverWoke && wakingOk) showWakeBanner();
   const res = await fetch(`${API}${path}`);
-  if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+  if (!res.ok) throw new Error(`API ${res.status}`);
   serverWoke = true;
   hideWakeBanner();
   return res.json();
 }
-
 async function prewarm() {
-  try {
-    await fetch(`${API}/health`);
-    serverWoke = true;
-    hideWakeBanner();
-  } catch (e) {}
+  try { await fetch(`${API}/health`); serverWoke = true; hideWakeBanner(); } catch(e) {}
 }
-
 function showWakeBanner() { document.getElementById('wakeBanner').classList.add('show'); }
 function hideWakeBanner() { document.getElementById('wakeBanner').classList.remove('show'); }
 
-// ── GENRE / PLAYLIST DATA ──────────────────────────────────
+// ── DATA ──────────────────────────────────────────────────
 const PLAYLISTS = [
-  { emoji:'🌙', name:'Chill Vibes', genre:'lofi', grad:'#1a0a3a,#7B4FFF' },
-  { emoji:'🚗', name:'Late Night Drive', genre:'downtempo', grad:'#0d1a3a,#4F7FFF' },
-  { emoji:'🧠', name:'Focus Mode', genre:'ambient', grad:'#0a1a0a,#2FCC71' },
-  { emoji:'🎉', name:'Party Hits', genre:'dance', grad:'#3a0a1a,#FF4F9A' },
-  { emoji:'🌅', name:'Morning Boost', genre:'acoustic', grad:'#3a2a0a,#FFB74F' },
-  { emoji:'💜', name:'R&B Soul', genre:'rnb', grad:'#2a0a3a,#CC4FFF' },
+  {emoji:'🌙',name:'Chill Vibes',genre:'lofi',grad:'#1a0a3a,#7B4FFF'},
+  {emoji:'🚗',name:'Late Night Drive',genre:'downtempo',grad:'#0d1a3a,#4F7FFF'},
+  {emoji:'🧠',name:'Focus Mode',genre:'ambient',grad:'#0a1a0a,#2FCC71'},
+  {emoji:'🎉',name:'Party Hits',genre:'dance',grad:'#3a0a1a,#FF4F9A'},
+  {emoji:'🌅',name:'Morning Boost',genre:'acoustic',grad:'#3a2a0a,#FFB74F'},
+  {emoji:'💜',name:'R&B Soul',genre:'rnb',grad:'#2a0a3a,#CC4FFF'},
 ];
 const GENRES = [
-  { name:'Pop', genre:'pop', emoji:'🎤', grad:'#4F1FCC,#7B4FFF' },
-  { name:'Hip-Hop', genre:'hiphop', emoji:'🎧', grad:'#1a1a1a,#444' },
-  { name:'R&B', genre:'rnb', emoji:'💜', grad:'#2a0a3a,#CC4FFF' },
-  { name:'Electronic', genre:'electronic', emoji:'⚡', grad:'#0a2a3a,#4FFFFF' },
-  { name:'Lo-Fi', genre:'lofi', emoji:'☕', grad:'#1a1200,#8B7355' },
-  { name:'Rock', genre:'rock', emoji:'🎸', grad:'#2a0a0a,#CC2222' },
-  { name:'Jazz', genre:'jazz', emoji:'🎷', grad:'#0a1a0a,#4FCC88' },
-  { name:'Classical', genre:'classical', emoji:'🎻', grad:'#1a1400,#CCA832' },
-  { name:'Indie', genre:'indie', emoji:'🌿', grad:'#0a2a0a,#4F9A4F' },
-  { name:'Latin', genre:'latin', emoji:'🔥', grad:'#3a1a00,#FF8C4F' },
+  {name:'Pop',genre:'pop',emoji:'🎤',grad:'#4F1FCC,#7B4FFF'},
+  {name:'Hip-Hop',genre:'hiphop',emoji:'🎧',grad:'#1a1a1a,#444'},
+  {name:'R&B',genre:'rnb',emoji:'💜',grad:'#2a0a3a,#CC4FFF'},
+  {name:'Electronic',genre:'electronic',emoji:'⚡',grad:'#0a2a3a,#4FFFFF'},
+  {name:'Lo-Fi',genre:'lofi',emoji:'☕',grad:'#1a1200,#8B7355'},
+  {name:'Rock',genre:'rock',emoji:'🎸',grad:'#2a0a0a,#CC2222'},
+  {name:'Jazz',genre:'jazz',emoji:'🎷',grad:'#0a1a0a,#4FCC88'},
+  {name:'Classical',genre:'classical',emoji:'🎻',grad:'#1a1400,#CCA832'},
+  {name:'Indie',genre:'indie',emoji:'🌿',grad:'#0a2a0a,#4F9A4F'},
+  {name:'Latin',genre:'latin',emoji:'🔥',grad:'#3a1a00,#FF8C4F'},
 ];
 
-// ── NAVIGATION ────────────────────────────────────────────
+// ── NAV ───────────────────────────────────────────────────
 function nav(tab) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('page-'+tab).classList.add('active');
   ['np','home','search','lib'].forEach(t => {
-    const el = document.getElementById('tab-' + t);
-    if (el) el.classList.toggle('active', t === tab);
+    const el = document.getElementById('tab-'+t);
+    if (el) el.classList.toggle('active', t===tab);
   });
-  if (tab === 'lib') renderLib('liked');
-  if (tab === 'home') setGreet();
+  if (tab==='lib') renderLib('liked');
+  if (tab==='home') setGreet();
 }
 function goSearch() {
   nav('search');
-  setTimeout(() => document.getElementById('searchInput').focus(), 200);
+  setTimeout(()=>document.getElementById('searchInput').focus(),200);
 }
 function setGreet() {
   const h = new Date().getHours();
-  document.getElementById('greetText').textContent = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greetText').textContent = h<12?'Good morning':h<18?'Good afternoon':'Good evening';
 }
 
-// ── HOME ──────────────────────────────────────────────────
+// ── HOME ─────────────────────────────────────────────────
 async function renderHome() {
   setGreet();
   document.getElementById('genreGrid').innerHTML = genreGridHTML();
   document.getElementById('searchGenres').innerHTML = genreGridHTML();
-  document.getElementById('plRow').innerHTML = PLAYLISTS.map(p => `
+  document.getElementById('plRow').innerHTML = PLAYLISTS.map(p=>`
     <div class="pcard" onclick="playPlaylist('${p.genre}','${esc(p.name)}')">
       <div class="pcard-art" style="background:linear-gradient(135deg,${p.grad})">${p.emoji}<div class="pcard-play-btn">▶</div></div>
       <div class="pcard-name">${esc(p.name)}</div><div class="pcard-sub">Tap to play</div>
@@ -532,16 +560,16 @@ async function renderHome() {
   try {
     const data = await apiGet('/trending?genre=pop&limit=12');
     document.getElementById('trendRow').innerHTML = data.results.length
-      ? data.results.map(t => tCard(t)).join('')
+      ? data.results.map(t=>tCard(t)).join('')
       : '<div style="padding:20px;color:var(--text3);font-size:12px">No tracks found</div>';
-  } catch (e) {
-    document.getElementById('trendRow').innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Could not load. Try again later.</div>';
+  } catch(e) {
+    document.getElementById('trendRow').innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Could not load.</div>';
   }
 }
 
 function genreGridHTML() {
-  return GENRES.map(g => `
-    <div class="gcard" style="background:linear-gradient(135deg,${g.grad})" onclick="searchGenre('${g.name}','${esc(g.name)}')">
+  return GENRES.map(g=>`
+    <div class="gcard" style="background:linear-gradient(135deg,${g.grad})" onclick="searchGenre('${esc(g.name)}')">
       <div class="gcard-name">${g.name}</div>
       <div class="gcard-emoji">${g.emoji}</div>
     </div>`).join('');
@@ -549,14 +577,11 @@ function genreGridHTML() {
 
 function renderRecent() {
   const rr = document.getElementById('recentRow');
-  const recent = S.history.slice(0, 8);
-  if (!recent.length) {
-    rr.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Play something to see history</div>';
-    return;
-  }
-  rr.innerHTML = recent.map(t => `
+  const recent = S.history.slice(0,8);
+  if (!recent.length) { rr.innerHTML='<div style="padding:20px;color:var(--text3);font-size:12px">Play something to see history</div>'; return; }
+  rr.innerHTML = recent.map(t=>`
     <div class="rcard" onclick='playTrackObject(${trackJSON(t)})'>
-      <div class="rcard-art">${t.thumb ? `<img src="${t.thumb}" onerror="this.style.display='none'" loading="lazy">` : '🎵'}</div>
+      <div class="rcard-art">${t.thumb?`<img src="${t.thumb}" onerror="this.style.display='none'" loading="lazy">`:'🎵'}</div>
       <div><div class="rcard-name">${esc(t.title)}</div><div class="rcard-type">${esc(t.artist)}</div></div>
     </div>`).join('');
 }
@@ -570,55 +595,47 @@ function tCard(t) {
     </div>
     <div class="tcard-name">${esc(t.title)}</div>
     <div class="tcard-artist">${esc(t.artist)}</div>
-    ${t.duration_str ? `<div class="tcard-dur">${t.duration_str}</div>` : ''}
+    ${t.duration_str?`<div class="tcard-dur">${t.duration_str}</div>`:''}
   </div>`;
 }
 
 function trackJSON(t) {
-  return JSON.stringify({ id: t.id, title: t.title, artist: t.artist, thumb: t.thumb, duration_str: t.duration_str || '' })
-    .replace(/"/g, '&quot;');
+  return JSON.stringify({id:t.id,title:t.title,artist:t.artist,thumb:t.thumb,duration_str:t.duration_str||''})
+    .replace(/"/g,'&quot;');
 }
 
 async function playFeatured() {
-  toast('Loading trending hits…', '🔥');
+  toast('Loading trending hits…','🔥');
   try {
     const data = await apiGet('/trending?genre=pop&limit=10');
-    if (!data.results.length) { toast('No tracks found', '⚠️'); return; }
-    S.queue = data.results;
-    S.idx = 0;
-    await loadTrack(0);
-    nav('np');
-  } catch (e) {
-    toast('Could not load — check backend', '⚠️');
-  }
+    if (!data.results.length) { toast('No tracks found','⚠️'); return; }
+    S.queue = data.results; S.idx = 0;
+    loadTrack(0); nav('np');
+  } catch(e) { toast('Could not load','⚠️'); }
 }
 
 async function playPlaylist(genre, name) {
-  toast(`Loading ${name}…`, '🎵');
+  toast(`Loading ${name}…`,'🎵');
   try {
     const data = await apiGet(`/trending?genre=${encodeURIComponent(genre)}&limit=15`);
-    if (!data.results.length) { toast('No tracks found for ' + name, '⚠️'); return; }
-    S.queue = data.results;
-    S.idx = 0;
-    await loadTrack(0);
-    nav('np');
-  } catch (e) {
-    toast('Could not load playlist', '⚠️');
-  }
+    if (!data.results.length) { toast('No tracks found','⚠️'); return; }
+    S.queue = data.results; S.idx = 0;
+    loadTrack(0); nav('np');
+  } catch(e) { toast('Could not load playlist','⚠️'); }
 }
 
 // ── SEARCH ────────────────────────────────────────────────
 let searchTimer;
 function onSearch(q) {
   clearTimeout(searchTimer);
-  document.getElementById('clearBtn').style.display = q ? 'block' : 'none';
+  document.getElementById('clearBtn').style.display = q?'block':'none';
   const body = document.getElementById('searchBody');
   if (!q.trim()) {
     body.innerHTML = `<div class="sec-title" style="margin-bottom:14px">Browse Genres</div><div class="genre-grid">${genreGridHTML()}</div>`;
     return;
   }
   body.innerHTML = '<div class="search-loading"><div class="spin"></div>Searching…</div>';
-  searchTimer = setTimeout(() => doSearch(q), 500);
+  searchTimer = setTimeout(()=>doSearch(q), 500);
 }
 
 async function doSearch(q) {
@@ -631,20 +648,19 @@ async function doSearch(q) {
       body.innerHTML = '<div class="search-empty"><div class="search-empty-icon">🔍</div><p>No results found</p></div>';
       return;
     }
-    body.innerHTML = `<div class="sresults">${data.results.map(t => `
+    body.innerHTML = `<div class="sresults">${data.results.map(t=>`
       <div class="sresult" onclick='playTrackObject(${trackJSON(t)})'>
         <div class="sresult-art"><img src="${t.thumb}" onerror="this.style.display='none'" loading="lazy"></div>
         <div class="sresult-info">
           <div class="sresult-title">${esc(t.title)}</div>
           <div class="sresult-sub">${esc(t.artist)}</div>
-          ${t.duration_str ? `<div class="sresult-dur">${t.duration_str}</div>` : ''}
+          ${t.duration_str?`<div class="sresult-dur">${t.duration_str}</div>`:''}
         </div>
         <button class="sresult-btn" onclick='event.stopPropagation();playTrackObject(${trackJSON(t)})'>▶</button>
       </div>`).join('')}</div>`;
-  } catch (e) {
+  } catch(e) {
     setLoad(false);
-    body.innerHTML = `<div class="search-empty"><div class="search-empty-icon">⚠️</div><p>Search failed: ${esc(e.message)}</p></div>`;
-    toast('Search error: ' + e.message, '❌');
+    body.innerHTML = `<div class="search-empty"><div class="search-empty-icon">⚠️</div><p>Search failed</p></div>`;
   }
 }
 
@@ -654,7 +670,7 @@ function clearSearch() {
   document.getElementById('searchInput').focus();
 }
 
-function searchGenre(tag, name) {
+function searchGenre(name) {
   goSearch();
   const input = document.getElementById('searchInput');
   input.value = name;
@@ -662,262 +678,241 @@ function searchGenre(tag, name) {
 }
 
 // ── PLAYBACK ──────────────────────────────────────────────
-async function playTrackObject(t) {
-  const exists = S.queue.findIndex(x => x.id === t.id);
-  if (exists === -1) { S.queue.push(t); S.idx = S.queue.length - 1; }
+function playTrackObject(t) {
+  const exists = S.queue.findIndex(x=>x.id===t.id);
+  if (exists===-1) { S.queue.push(t); S.idx = S.queue.length-1; }
   else { S.idx = exists; }
-  await loadTrack(S.idx);
+  loadTrack(S.idx);
   addToHistory(t);
   nav('np');
 }
 
-async function loadTrack(idx) {
+function loadTrack(idx) {
   if (idx < 0 || idx >= S.queue.length) return;
   const t = S.queue[idx];
   S.idx = idx;
-  S.retrying = false;
+  S.currentTime = 0;
+  S.duration = 0;
+  stopProgressTimer();
 
   updateTrackUI(t);
   showStreamLoading();
   setLoad(true);
   document.getElementById('tab-np').classList.add('has-track');
 
-  try {
-    const data = await apiGet(`/stream/${t.id}`, false);
-
-    // Merge proxy_url and updated track metadata back onto queue entry
-    S.queue[idx] = { ...t, proxy_url: data.proxy_url };
-    if (data.track) {
-      S.queue[idx] = { ...S.queue[idx], ...data.track, proxy_url: data.proxy_url };
-      updateTrackUI(S.queue[idx]);
-    }
-
-    audio.src = data.url;
-    audio.load();
-    audio.play().catch(err => {
-      console.error('Initial play() rejected:', err);
-      // Don't toast here — the error event will handle fallback
-    });
-
-  } catch (e) {
-    console.error('Stream API error:', e);
-    hideStreamLoading();
-    setLoad(false);
-    toast('Could not load track. Trying next…', '⚠️');
-    setTimeout(nextTrack, 1500);
-  }
-}
-
-function showStreamLoading() {
-  S.loadingStream = true;
-  document.getElementById('npArtLoading').classList.add('show');
-}
-function hideStreamLoading() {
-  S.loadingStream = false;
-  document.getElementById('npArtLoading').classList.remove('show');
+  // Play via YouTube IFrame — no backend stream extraction needed!
+  ytPlay(t.id);
 }
 
 function togglePlay() {
-  if (S.queue.length === 0) { goSearch(); return; }
-  if (!audio.src) { loadTrack(S.idx >= 0 ? S.idx : 0); return; }
-  if (S.playing) { audio.pause(); }
-  else { audio.play().catch(() => toast('Playback blocked — tap again', '⚠️')); }
+  if (S.queue.length===0) { goSearch(); return; }
+  if (!ytPlayer || !ytReady) return;
+  if (S.playing) { ytPlayer.pauseVideo(); }
+  else {
+    if (S.idx < 0) { loadTrack(0); }
+    else { ytPlayer.playVideo(); }
+  }
 }
 
 function prevTrack() {
-  if (S.currentTime > 3) { audio.currentTime = 0; return; }
-  const i = S.shuffle ? rndIdx() : S.idx - 1;
-  if (i >= 0) loadTrack(i); else audio.currentTime = 0;
+  if (S.currentTime > 3) { ytPlayer && ytPlayer.seekTo(0, true); return; }
+  const i = S.shuffle ? rndIdx() : S.idx-1;
+  if (i >= 0) loadTrack(i);
+  else { ytPlayer && ytPlayer.seekTo(0, true); }
 }
 
 function nextTrack() {
-  const i = S.shuffle ? rndIdx() : S.idx + 1;
+  const i = S.shuffle ? rndIdx() : S.idx+1;
   if (i < S.queue.length) loadTrack(i);
   else if (S.repeat && S.queue.length) loadTrack(0);
 }
 
 function onEnded() {
-  if (S.repeat && S.queue.length === 1) { audio.currentTime = 0; audio.play(); }
+  if (S.repeat && S.queue.length===1) { ytPlayer && ytPlayer.seekTo(0,true); ytPlayer.playVideo(); }
   else nextTrack();
 }
 
 function rndIdx() {
-  if (S.queue.length < 2) return S.idx;
-  let i;
-  do { i = Math.floor(Math.random() * S.queue.length); } while (i === S.idx);
+  if (S.queue.length<2) return S.idx;
+  let i; do { i=Math.floor(Math.random()*S.queue.length); } while(i===S.idx);
   return i;
 }
 
 function seekTo(e) {
-  if (!S.duration) return;
+  if (!S.duration || !ytPlayer) return;
   const pct = e.offsetX / e.currentTarget.offsetWidth;
-  audio.currentTime = pct * S.duration;
+  ytPlayer.seekTo(pct * S.duration, true);
 }
 
 function toggleShuffle() {
   S.shuffle = !S.shuffle;
   document.getElementById('npShuffle').classList.toggle('active', S.shuffle);
-  toast(S.shuffle ? 'Shuffle on' : 'Shuffle off', '🔀');
+  toast(S.shuffle?'Shuffle on':'Shuffle off','🔀');
 }
 
 function toggleRepeat() {
   S.repeat = !S.repeat;
   document.getElementById('npRepeat').classList.toggle('active', S.repeat);
-  toast(S.repeat ? 'Repeat on' : 'Repeat off', '🔁');
+  toast(S.repeat?'Repeat on':'Repeat off','🔁');
 }
 
 function toggleLike() {
-  if (S.idx < 0 || !S.queue[S.idx]) return;
+  if (S.idx<0||!S.queue[S.idx]) return;
   const t = S.queue[S.idx];
   if (S.liked.has(t.id)) {
     S.liked.delete(t.id);
-    document.getElementById('npLike').textContent = '♡';
+    document.getElementById('npLike').textContent='♡';
     document.getElementById('npLike').classList.remove('liked');
   } else {
     S.liked.add(t.id);
-    document.getElementById('npLike').textContent = '♥';
+    document.getElementById('npLike').textContent='♥';
     document.getElementById('npLike').classList.add('liked');
-    toast('Liked!', '❤️');
+    toast('Liked!','❤️');
   }
 }
 
 function setVol(v) {
   S.vol = +v;
-  audio.volume = S.muted ? 0 : S.vol / 100;
-  document.getElementById('volIcon').textContent = S.vol == 0 ? '🔇' : S.vol < 30 ? '🔉' : '🔊';
+  if (ytPlayer && ytReady) {
+    if (S.muted) ytPlayer.setVolume(0);
+    else ytPlayer.setVolume(S.vol);
+  }
+  document.getElementById('volIcon').textContent = S.vol==0?'🔇':S.vol<30?'🔉':'🔊';
 }
 
 function toggleMute() {
   S.muted = !S.muted;
-  audio.volume = S.muted ? 0 : S.vol / 100;
-  document.getElementById('volIcon').textContent = S.muted ? '🔇' : S.vol < 30 ? '🔉' : '🔊';
+  if (ytPlayer && ytReady) {
+    if (S.muted) ytPlayer.mute();
+    else { ytPlayer.unMute(); ytPlayer.setVolume(S.vol); }
+  }
+  document.getElementById('volIcon').textContent = S.muted?'🔇':S.vol<30?'🔉':'🔊';
 }
 
-// ── UI UPDATES ────────────────────────────────────────────
+// ── UI ────────────────────────────────────────────────────
 function updateTrackUI(t) {
   document.getElementById('npTitle').textContent = t.title;
   document.getElementById('npArtist').textContent = t.artist;
+
   const art = document.getElementById('npArt');
   const loadingEl = document.getElementById('npArtLoading');
-  art.innerHTML = t.thumb
-    ? `<img src="${t.thumb}" onerror="this.style.display='none'">`
-    : '<div class="np-art-emoji">🎵</div>';
+  if (t.thumb) {
+    art.innerHTML = `<img src="${t.thumb}" onerror="this.style.display='none'">`;
+  } else {
+    art.innerHTML = '<div class="np-art-emoji">🎵</div>';
+  }
   art.appendChild(loadingEl);
+
   const liked = S.liked.has(t.id);
-  document.getElementById('npLike').textContent = liked ? '♥' : '♡';
+  document.getElementById('npLike').textContent = liked?'♥':'♡';
   document.getElementById('npLike').classList.toggle('liked', liked);
+
   document.getElementById('miniName').textContent = t.title;
   document.getElementById('miniArtist').textContent = t.artist;
   const ma = document.getElementById('miniArt');
-  ma.innerHTML = t.thumb ? `<img src="${t.thumb}" onerror="this.outerHTML='🎵'">` : '🎵';
+  ma.innerHTML = t.thumb?`<img src="${t.thumb}" onerror="this.outerHTML='🎵'">`:'🎵';
   document.getElementById('miniPlayer').classList.add('visible');
 }
 
 function updatePlayBtns() {
-  const icon = S.playing ? '⏸' : '▶';
+  const icon = S.playing?'⏸':'▶';
   document.getElementById('npPlayBtn').textContent = icon;
   document.getElementById('miniPlayBtn').textContent = icon;
   document.getElementById('npArt').classList.toggle('playing', S.playing);
 }
 
 function updateProgress() {
-  const pct = S.duration ? (S.currentTime / S.duration) * 100 : 0;
-  document.getElementById('npFill').style.width = pct + '%';
-  document.getElementById('miniPFill').style.width = pct + '%';
+  const pct = S.duration ? (S.currentTime/S.duration)*100 : 0;
+  document.getElementById('npFill').style.width = pct+'%';
+  document.getElementById('miniPFill').style.width = pct+'%';
   document.getElementById('npCur').textContent = fmt(S.currentTime);
   document.getElementById('npDur').textContent = fmt(S.duration);
 }
 
-function setLoad(v) { document.getElementById('lbar').classList.toggle('on', v); }
+function showStreamLoading() { document.getElementById('npArtLoading').classList.add('show'); }
+function hideStreamLoading() { document.getElementById('npArtLoading').classList.remove('show'); }
+function setLoad(v) { document.getElementById('lbar').classList.toggle('on',v); }
 
-// ── HISTORY ───────────────────────────────────────────────
+// ── HISTORY & LIBRARY ─────────────────────────────────────
 function addToHistory(t) {
-  S.history = S.history.filter(x => x.id !== t.id);
+  S.history = S.history.filter(x=>x.id!==t.id);
   S.history.unshift(t);
-  if (S.history.length > 30) S.history.pop();
+  if (S.history.length>30) S.history.pop();
   renderRecent();
 }
 
-// ── LIBRARY ───────────────────────────────────────────────
 function libTab(el, tab) {
-  document.querySelectorAll('.lib-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   renderLib(tab);
 }
 
 function renderLib(tab) {
   const body = document.getElementById('libBody');
-  if (tab === 'liked') {
-    const tracks = [...S.liked]
-      .map(id => S.queue.find(t => t.id === id) || S.history.find(t => t.id === id))
-      .filter(Boolean);
-    if (!tracks.length) {
-      body.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">♡</div><p>No liked songs yet.<br>Heart a track while it plays.</p></div>`;
-      return;
-    }
-    body.innerHTML = `<div class="liked-list">${tracks.map(t => `
+  if (tab==='liked') {
+    const tracks = [...S.liked].map(id=>S.queue.find(t=>t.id===id)||S.history.find(t=>t.id===id)).filter(Boolean);
+    if (!tracks.length) { body.innerHTML=`<div class="lib-empty"><div class="lib-empty-icon">♡</div><p>No liked songs yet.<br>Heart a track while it plays.</p></div>`; return; }
+    body.innerHTML=`<div class="liked-list">${tracks.map(t=>`
       <div class="liked-item" onclick='playTrackObject(${trackJSON(t)})'>
-        <div class="liked-art">${t.thumb ? `<img src="${t.thumb}" onerror="this.style.display='none'">` : '🎵'}</div>
+        <div class="liked-art">${t.thumb?`<img src="${t.thumb}" onerror="this.style.display='none'">`:'🎵'}</div>
         <div class="liked-info"><div class="liked-name">${esc(t.title)}</div><div class="liked-artist">${esc(t.artist)}</div></div>
         <button class="liked-more" onclick="event.stopPropagation()">•••</button>
       </div>`).join('')}</div>`;
-  } else if (tab === 'playlists') {
-    body.innerHTML = `<div class="hrow" style="flex-wrap:wrap;gap:12px">${PLAYLISTS.map(p => `
+  } else if (tab==='playlists') {
+    body.innerHTML=`<div class="hrow" style="flex-wrap:wrap;gap:12px">${PLAYLISTS.map(p=>`
       <div class="pcard" onclick="playPlaylist('${p.genre}','${esc(p.name)}')">
         <div class="pcard-art" style="background:linear-gradient(135deg,${p.grad})">${p.emoji}<div class="pcard-play-btn">▶</div></div>
         <div class="pcard-name">${esc(p.name)}</div><div class="pcard-sub">Tap to play</div>
       </div>`).join('')}</div>`;
   } else {
-    if (!S.history.length) {
-      body.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">🕐</div><p>No history yet.</p><button class="lib-cta" onclick="goSearch()">Find Music</button></div>`;
-      return;
-    }
-    body.innerHTML = `<div class="liked-list">${S.history.map(t => `
+    if (!S.history.length) { body.innerHTML=`<div class="lib-empty"><div class="lib-empty-icon">🕐</div><p>No history yet.</p><button class="lib-cta" onclick="goSearch()">Find Music</button></div>`; return; }
+    body.innerHTML=`<div class="liked-list">${S.history.map(t=>`
       <div class="liked-item" onclick='playTrackObject(${trackJSON(t)})'>
-        <div class="liked-art">${t.thumb ? `<img src="${t.thumb}" onerror="this.style.display='none'">` : '🎵'}</div>
+        <div class="liked-art">${t.thumb?`<img src="${t.thumb}" onerror="this.style.display='none'">`:'🎵'}</div>
         <div class="liked-info"><div class="liked-name">${esc(t.title)}</div><div class="liked-artist">${esc(t.artist)}</div></div>
       </div>`).join('')}</div>`;
   }
 }
 
 // ── TOAST ─────────────────────────────────────────────────
-function toast(msg, icon = '✦') {
+function toast(msg, icon='✦') {
   const wrap = document.getElementById('toasts');
   const el = document.createElement('div');
-  el.className = 'toast';
-  el.innerHTML = `<span>${icon}</span> ${esc(msg)}`;
+  el.className='toast';
+  el.innerHTML=`<span>${icon}</span> ${esc(msg)}`;
   wrap.appendChild(el);
-  setTimeout(() => { el.style.animation = 'tout .3s forwards'; setTimeout(() => el.remove(), 300); }, 3500);
+  setTimeout(()=>{ el.style.animation='tout .3s forwards'; setTimeout(()=>el.remove(),300); },3500);
 }
 
 // ── UTILS ─────────────────────────────────────────────────
-function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;'); }
-function fmt(s) { if (!isFinite(s)) return '0:00'; const m = Math.floor(s/60), sec = Math.floor(s%60); return `${m}:${sec.toString().padStart(2,'0')}`; }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;')}
+function fmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${sec.toString().padStart(2,'0')}`}
 
-// ── KEYBOARD ──────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (document.activeElement.tagName === 'INPUT') return;
-  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-  if (e.code === 'ArrowLeft') prevTrack();
-  if (e.code === 'ArrowRight') nextTrack();
-  if (e.key.toLowerCase() === 'f') goSearch();
-  if (e.key.toLowerCase() === 's') toggleShuffle();
-  if (e.key.toLowerCase() === 'r') toggleRepeat();
+// ── KEYBOARD ─────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(document.activeElement.tagName==='INPUT')return;
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='ArrowLeft')prevTrack();
+  if(e.code==='ArrowRight')nextTrack();
+  if(e.key.toLowerCase()==='f')goSearch();
+  if(e.key.toLowerCase()==='s')toggleShuffle();
+  if(e.key.toLowerCase()==='r')toggleRepeat();
 });
 
 // ── SPLASH ────────────────────────────────────────────────
-(function() {
-  const splash = document.getElementById('splash');
-  setTimeout(() => {
+(function(){
+  const splash=document.getElementById('splash');
+  setTimeout(()=>{
     splash.classList.add('hide');
-    setTimeout(() => { splash.style.display = 'none'; }, 650);
-  }, 2400);
+    setTimeout(()=>{splash.style.display='none';},650);
+  },2400);
 })();
 
-// ── INIT ──────────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────────
 renderHome();
 nav('home');
 prewarm();
 </script>
 </body>
 </html>
+
