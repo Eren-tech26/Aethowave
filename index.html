@@ -307,7 +307,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 <script>
 const API = 'https://aethowave-api.onrender.com';
 
-// ── STATE ─────────────────────────────────────────────────
 const S = {
   queue:[], idx:-1, playing:false,
   shuffle:false, repeat:false,
@@ -316,8 +315,6 @@ const S = {
   duration:0, currentTime:0,
 };
 
-// ── AUDIO ELEMENT ─────────────────────────────────────────
-// Real <audio> tag = OS treats it as a real media player = background playback works
 const audio = document.getElementById('audioEl');
 audio.volume = S.vol / 100;
 
@@ -335,7 +332,6 @@ audio.addEventListener('error', (e) => {
   setTimeout(nextTrack, 1000);
 });
 
-// ── MEDIA SESSION ─────────────────────────────────────────
 function setupMediaSession(t) {
   if (!('mediaSession' in navigator)) return;
   navigator.mediaSession.metadata = new MediaMetadata({
@@ -354,12 +350,9 @@ function setupMediaSession(t) {
 }
 function updateMediaSessionPosition() {
   if (!('mediaSession' in navigator) || !S.duration) return;
-  try {
-    navigator.mediaSession.setPositionState({ duration: S.duration, playbackRate: 1, position: S.currentTime });
-  } catch(e) {}
+  try { navigator.mediaSession.setPositionState({ duration: S.duration, playbackRate: 1, position: S.currentTime }); } catch(e) {}
 }
 
-// ── API ───────────────────────────────────────────────────
 let serverWoke = false;
 async function apiGet(path, waking=true) {
   if (!serverWoke && waking) showWakeBanner();
@@ -374,7 +367,6 @@ async function prewarm() {
 function showWakeBanner() { document.getElementById('wakeBanner').classList.add('show'); }
 function hideWakeBanner() { document.getElementById('wakeBanner').classList.remove('show'); }
 
-// ── DATA ──────────────────────────────────────────────────
 const PLAYLISTS = [
   {emoji:'🌙',name:'Chill Vibes',genre:'lofi',grad:'#1a0a3a,#7B4FFF'},
   {emoji:'🚗',name:'Late Night Drive',genre:'downtempo',grad:'#0d1a3a,#4F7FFF'},
@@ -391,7 +383,6 @@ const GENRES = [
   {name:'Indie',emoji:'🌿',grad:'#0a2a0a,#4F9A4F'},{name:'Latin',emoji:'🔥',grad:'#3a1a00,#FF8C4F'},
 ];
 
-// ── NAV ───────────────────────────────────────────────────
 function nav(tab) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+tab).classList.add('active');
@@ -402,7 +393,6 @@ function nav(tab) {
 function goSearch() { nav('search'); setTimeout(()=>document.getElementById('searchInput').focus(),200); }
 function setGreet() { const h=new Date().getHours(); document.getElementById('greetText').textContent=h<12?'Good morning':h<18?'Good afternoon':'Good evening'; }
 
-// ── HOME ──────────────────────────────────────────────────
 async function renderHome() {
   setGreet();
   document.getElementById('genreGrid').innerHTML=genreGridHTML();
@@ -441,7 +431,6 @@ async function playPlaylist(genre,name) {
   try { const data=await apiGet(`/trending?genre=${encodeURIComponent(genre)}&limit=15`); if(!data.results.length){toast('No tracks found','⚠️');return;} S.queue=data.results;S.idx=0;loadTrack(0);nav('np'); } catch(e){toast('Could not load','⚠️');}
 }
 
-// ── SEARCH ────────────────────────────────────────────────
 let searchTimer;
 function onSearch(q) {
   clearTimeout(searchTimer);
@@ -464,7 +453,6 @@ async function doSearch(q) {
 function clearSearch() { document.getElementById('searchInput').value='';onSearch('');document.getElementById('searchInput').focus(); }
 function searchGenre(name) { goSearch();const input=document.getElementById('searchInput');input.value=name;onSearch(name); }
 
-// ── PLAYBACK ──────────────────────────────────────────────
 function playTrackObject(t) {
   const exists=S.queue.findIndex(x=>x.id===t.id);
   if(exists===-1){S.queue.push(t);S.idx=S.queue.length-1;}else{S.idx=exists;}
@@ -480,16 +468,14 @@ async function loadTrack(idx) {
   document.getElementById('tab-np').classList.add('has-track');
 
   try {
-    // Get stream URL from Piped via our backend
     const streamUrl = `${API}/proxy/${t.id}`;
-setupMediaSession(t);
-audio.src = streamUrl;
+    setupMediaSession(t);
+    audio.src = streamUrl;
     audio.load();
     const playPromise = audio.play();
     if (playPromise) {
       playPromise.catch(err => {
         console.warn('Autoplay blocked:', err);
-        // Don't toast — user can tap play. Browser policy.
         hideStreamLoading(); setLoad(false);
       });
     }
@@ -523,7 +509,6 @@ function toggleLike() {
 function setVol(v) { S.vol=+v; audio.volume=S.muted?0:S.vol/100; document.getElementById('volIcon').textContent=S.vol==0?'🔇':S.vol<30?'🔉':'🔊'; }
 function toggleMute() { S.muted=!S.muted; audio.volume=S.muted?0:S.vol/100; document.getElementById('volIcon').textContent=S.muted?'🔇':S.vol<30?'🔉':'🔊'; }
 
-// ── UI ────────────────────────────────────────────────────
 function updateTrackUI(t) {
   document.getElementById('npTitle').textContent=t.title;
   document.getElementById('npArtist').textContent=t.artist;
@@ -545,7 +530,6 @@ function showStreamLoading(){document.getElementById('npArtLoading').classList.a
 function hideStreamLoading(){document.getElementById('npArtLoading').classList.remove('show')}
 function setLoad(v){document.getElementById('lbar').classList.toggle('on',v)}
 
-// ── HISTORY & LIB ─────────────────────────────────────────
 function addToHistory(t){S.history=S.history.filter(x=>x.id!==t.id);S.history.unshift(t);if(S.history.length>30)S.history.pop();renderRecent();}
 function libTab(el,tab){document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderLib(tab);}
 function renderLib(tab) {
@@ -562,14 +546,10 @@ function renderLib(tab) {
   }
 }
 
-// ── TOAST ─────────────────────────────────────────────────
 function toast(msg,icon='✦'){const wrap=document.getElementById('toasts');const el=document.createElement('div');el.className='toast';el.innerHTML=`<span>${icon}</span> ${esc(msg)}`;wrap.appendChild(el);setTimeout(()=>{el.style.animation='tout .3s forwards';setTimeout(()=>el.remove(),300);},3500);}
-
-// ── UTILS ─────────────────────────────────────────────────
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;')}
 function fmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${sec.toString().padStart(2,'0')}`}
 
-// ── KEYBOARD ─────────────────────────────────────────────
 document.addEventListener('keydown',e=>{
   if(document.activeElement.tagName==='INPUT')return;
   if(e.code==='Space'){e.preventDefault();togglePlay();}
@@ -577,10 +557,8 @@ document.addEventListener('keydown',e=>{
   if(e.code==='ArrowRight')nextTrack();
 });
 
-// ── SPLASH ────────────────────────────────────────────────
 (function(){const splash=document.getElementById('splash');setTimeout(()=>{splash.classList.add('hide');setTimeout(()=>{splash.style.display='none';},650);},2400);})();
 
-// ── INIT ─────────────────────────────────────────────────
 renderHome(); nav('home'); prewarm();
 </script>
 </body>
