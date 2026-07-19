@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import yt_dlp
 import httpx
 import asyncio
@@ -8,7 +9,7 @@ import logging, random
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="AethoWave API", version="4.0.0")
+app = FastAPI(title="AethoWave API", version="5.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,16 +17,6 @@ app.add_middleware(
     allow_methods=["GET", "OPTIONS"],
     allow_headers=["*"],
 )
-
-INVIDIOUS_INSTANCES = [
-    "https://invidious.snopyta.org",
-    "https://invidious.kavin.rocks",
-    "https://vid.puffyan.us",
-    "https://invidious.nerdvpn.de",
-    "https://invidious.projectsegfau.lt",
-    "https://inv.tux.pizza",
-    "https://invidious.flokinet.to",
-]
 
 YDL_OPTS = {
     "quiet": True,
@@ -84,57 +75,44 @@ async def yt_search(query: str, limit: int) -> list:
         results.append(format_track(e))
     return results
 
-async def get_stream_from_invidious(video_id: str) -> dict:
-    instances = INVIDIOUS_INSTANCES.copy()
-    random.shuffle(instances)
-
-    async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
-        for base in instances:
-            try:
-                r = await client.get(
-                    f"{base}/api/v1/videos/{video_id}",
-                    headers={"User-Agent": "Mozilla/5.0"},
-                )
-                if r.status_code != 200:
-                    continue
-                data = r.json()
-
-                # Get audio-only streams
-                streams = [
-                    f for f in data.get("adaptiveFormats", [])
-                    if "audio" in f.get("type", "")
-                ]
-                if not streams:
-                    continue
-
-                streams.sort(key=lambda x: x.get("bitrate", 0), reverse=True)
-                best = streams[0]
-
-                track = {
-                    "id": video_id,
-                    "title": data.get("title", "Unknown"),
-                    "artist": data.get("author", "Unknown"),
-                    "thumb": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
-                    "duration": data.get("lengthSeconds", 0),
-                    "duration_str": fmt_dur(data.get("lengthSeconds", 0)),
-                }
-
-                return {
-                    "url": best["url"],
-                    "mime_type": best.get("type", "audio/webm").split(";")[0],
-                    "bitrate": best.get("bitrate", 0),
-                    "track": track,
-                    "instance": base,
-                }
-            except Exception as e:
-                logger.warning(f"Invidious instance {base} failed: {e}")
-                continue
-
-    raise HTTPException(status_code=502, detail="All Invidious instances failed")
+async def get_stream_direct(video_id: str) -> dict:
+    loop = asyncio.get_running_loop()
+    def _run():
+        opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "format": "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio",
+            "http_headers": {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/125.0.0.0 Safari/537.36"
+                ),
+            },
+        }
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(
+                f"https://www.youtube.com/watch?v={video_id}",
+                download=False
+            )
+            url = info.get("url")
+            if not url and info.get("requested_formats"):
+                url = info["requested_formats"][0].get("url")
+            return {
+                "url": url,
+                "mime_type": "audio/webm",
+                "title": info.get("title", "Unknown"),
+                "artist": info.get("uploader", "Unknown"),
+                "duration": info.get("duration", 0),
+                "duration_str": fmt_dur(info.get("duration", 0)),
+                "thumb": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
+            }
+    return await loop.run_in_executor(None, _run)
 
 @app.get("/")
 async def root():
-    return {"status": "AethoWave API v4 online", "version": "4.0.0"}
+    return {"status": "AethoWave API v5 online", "version": "5.0.0"}
 
 @app.get("/health")
 async def health():
@@ -178,10 +156,35 @@ async def trending(genre: str = Query("music", max_length=50), limit: int = Quer
 @app.get("/stream/{video_id}")
 async def stream(video_id: str):
     try:
-        result = await get_stream_from_invidious(video_id)
-        return result
+        info = await get_stream_direct(video_id)
+        return info
+    except Exception as e:
+        logger.error(f"Stream error for {video_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/proxy/{video_id}")
+async def proxy_stream(video_id: str):
+    try:
+        info = await get_stream_direct(video_id)
+        stream_url = info["url"]
+        if not stream_url:
+            raise HTTPException(status_code=502, detail="No stream URL found")
+
+        async def generate():
+            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+                async with client.stream("GET", stream_url, headers={
+                    "User-Agent": "Mozilla/5.0",
+                    "Referer": "https://www.youtube.com/",
+                }) as r:
+                    async for chunk in r.aiter_bytes(8192):
+                        yield chunk
+
+        return StreamingResponse(generate(), media_type=info["mime_type"], headers={
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "no-cache",
+        })
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Stream error for {video_id}: {e}")
+        logger.error(f"Proxy error for {video_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
