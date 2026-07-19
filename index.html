@@ -481,19 +481,9 @@ async function loadTrack(idx) {
 
   try {
     // Get stream URL from Piped via our backend
-    const data = await apiGet(`/stream/${t.id}`, false);
-    const streamUrl = data.url;
-
-    // Update track metadata if Piped returned richer info
-    if (data.track) {
-      S.queue[idx] = {...t, ...data.track};
-      updateTrackUI(S.queue[idx]);
-      setupMediaSession(S.queue[idx]);
-    } else {
-      setupMediaSession(t);
-    }
-
-    audio.src = streamUrl;
+    const streamUrl = `${API}/proxy/${t.id}`;
+setupMediaSession(t);
+audio.src = streamUrl;
     audio.load();
     const playPromise = audio.play();
     if (playPromise) {
