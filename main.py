@@ -4,12 +4,12 @@ from fastapi.responses import StreamingResponse
 import yt_dlp
 import httpx
 import asyncio
-import logging, random
+import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="AethoWave API", version="5.0.0")
+app = FastAPI(title="AethoWave API", version="5.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,11 +18,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-YDL_OPTS = {
+YDL_SEARCH_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "extract_flat": True,
     "skip_download": True,
+    "http_headers": {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/125.0.0.0 Safari/537.36"
+        ),
+    },
+}
+
+YDL_STREAM_OPTS = {
+    "quiet": True,
+    "no_warnings": True,
+    "skip_download": True,
+    "format": "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio",
+    "age_limit": 18,
     "http_headers": {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -61,7 +76,7 @@ def format_track(e: dict) -> dict:
 async def yt_search(query: str, limit: int) -> list:
     loop = asyncio.get_running_loop()
     def _run():
-        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
+        with yt_dlp.YoutubeDL(YDL_SEARCH_OPTS) as ydl:
             info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
             return (info or {}).get("entries", [])
     entries = await loop.run_in_executor(None, _run)
@@ -70,7 +85,7 @@ async def yt_search(query: str, limit: int) -> list:
         if not e:
             continue
         dur = e.get("duration") or 0
-        if dur and dur > 600:
+        if not dur or dur < 30 or dur > 600:
             continue
         results.append(format_track(e))
     return results
@@ -78,27 +93,18 @@ async def yt_search(query: str, limit: int) -> list:
 async def get_stream_direct(video_id: str) -> dict:
     loop = asyncio.get_running_loop()
     def _run():
-        opts = {
-            "quiet": True,
-            "no_warnings": True,
-            "skip_download": True,
-            "format": "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio",
-            "http_headers": {
-                "User-Agent": (
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/125.0.0.0 Safari/537.36"
-                ),
-            },
-        }
-        with yt_dlp.YoutubeDL(opts) as ydl:
+        with yt_dlp.YoutubeDL(YDL_STREAM_OPTS) as ydl:
             info = ydl.extract_info(
                 f"https://www.youtube.com/watch?v={video_id}",
                 download=False
             )
+            if not info:
+                raise Exception("No info returned")
             url = info.get("url")
             if not url and info.get("requested_formats"):
                 url = info["requested_formats"][0].get("url")
+            if not url:
+                raise Exception("No URL in extracted info")
             return {
                 "url": url,
                 "mime_type": "audio/webm",
@@ -112,7 +118,7 @@ async def get_stream_direct(video_id: str) -> dict:
 
 @app.get("/")
 async def root():
-    return {"status": "AethoWave API v5 online", "version": "5.0.0"}
+    return {"status": "AethoWave API v5.1 online", "version": "5.1.0"}
 
 @app.get("/health")
 async def health():
@@ -167,8 +173,6 @@ async def proxy_stream(video_id: str):
     try:
         info = await get_stream_direct(video_id)
         stream_url = info["url"]
-        if not stream_url:
-            raise HTTPException(status_code=502, detail="No stream URL found")
 
         async def generate():
             async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
