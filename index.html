@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AethoWave</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -98,13 +99,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .search-empty{text-align:center;padding:48px 20px}
 .search-empty-icon{font-size:44px;margin-bottom:12px;opacity:.4}
 .search-empty p{color:var(--text3);font-size:13px}
-
-/* NOW PLAYING */
 .np-content{padding:0 20px;display:flex;flex-direction:column;align-items:center}
 .np-header{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
 .np-header-title{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
 .np-chevron{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px}
-/* YouTube IFrame container — hidden but functional */
 .yt-container{width:0;height:0;overflow:hidden;position:absolute;pointer-events:none;opacity:0}
 .np-art{width:100%;max-width:300px;aspect-ratio:1;border-radius:24px;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);transition:box-shadow .5s;position:relative}
 .np-art.playing{box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 80px rgba(123,79,255,.2)}
@@ -133,8 +131,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .vol-icon{font-size:16px;color:var(--text3);cursor:pointer;flex-shrink:0}
 .vol-slider{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.12);outline:none;cursor:pointer}
 .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
-
-/* LIBRARY */
 .lib-content{padding:0 16px}
 .lib-tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px}
 .lib-tab{padding:7px 16px;border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--gb);background:var(--glass);color:var(--text2);white-space:nowrap;transition:all .18s;flex-shrink:0}
@@ -152,8 +148,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .liked-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .liked-artist{font-size:11px;color:var(--text3);margin-top:2px}
 .liked-more{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:6px}
-
-/* MINI PLAYER */
 .mini-player{position:fixed;bottom:86px;left:12px;right:12px;background:rgba(28,28,30,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid var(--gb2);border-radius:16px;padding:12px 14px;display:none;align-items:center;gap:12px;z-index:95;cursor:pointer;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 .mini-player.visible{display:flex}
 .mini-art{width:42px;height:42px;border-radius:10px;flex-shrink:0;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px}
@@ -166,8 +160,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .mini-play{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .mini-prog{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.08);border-radius:0 0 16px 16px;overflow:hidden}
 .mini-prog-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));width:0%;transition:width .25s linear}
-
-/* DOCK */
 .dock{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;background:rgba(18,18,20,0.88);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:8px 8px;z-index:100;box-shadow:0 16px 48px rgba(0,0,0,.6);width:calc(100% - 32px);max-width:400px}
 .dock-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:40px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:600;letter-spacing:.2px;transition:all .2s;position:relative}
 .dock-item svg{width:22px;height:22px;transition:all .2s}
@@ -176,8 +168,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .dock-item.now-playing-tab{background:linear-gradient(135deg,rgba(123,79,255,.25),rgba(255,79,154,.15));border:1px solid rgba(123,79,255,.3);border-radius:40px}
 .dock-pip{width:4px;height:4px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));position:absolute;top:6px;right:14px;display:none}
 .dock-item.has-track .dock-pip{display:block}
-
-/* TOASTS */
 .toasts{position:fixed;top:60px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:500;pointer-events:none;width:calc(100% - 32px);max-width:360px}
 .toast{background:rgba(28,28,30,.95);backdrop-filter:blur(20px);border:1px solid var(--gb);border-radius:14px;padding:12px 16px;font-size:13px;font-weight:500;color:#fff;display:flex;align-items:center;gap:10px;animation:tin .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 @keyframes tin{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -185,8 +175,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .lbar{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--pink));z-index:999;transform:scaleX(0);transform-origin:left;display:none}
 .lbar.on{display:block;animation:lb 1.8s ease-in-out infinite}
 @keyframes lb{0%{transform:scaleX(0);transform-origin:left}49%{transform:scaleX(1);transform-origin:left}50%{transform-origin:right}100%{transform:scaleX(0);transform-origin:right}}
-
-/* SPLASH */
 #splash{position:fixed;inset:0;z-index:9999;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;pointer-events:none}
 #splash.hide{animation:splashOut .6s cubic-bezier(.7,0,.3,1) forwards}
 @keyframes splashOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
@@ -206,7 +194,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 </head>
 <body>
 
-<!-- SPLASH -->
 <div id="splash">
   <div class="splash-orb"></div>
   <div class="splash-wave"><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div><div class="sw"></div></div>
@@ -215,7 +202,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   <div class="splash-bar"><div class="splash-bar-fill"></div></div>
 </div>
 
-<!-- Hidden YouTube IFrame player -->
 <div class="yt-container">
   <div id="yt-player"></div>
 </div>
@@ -243,7 +229,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   </div>
 
   <div class="pages">
-    <!-- NOW PLAYING -->
     <div class="page" id="page-np">
       <div class="np-content">
         <div class="np-header">
@@ -289,7 +274,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       </div>
     </div>
 
-    <!-- HOME -->
     <div class="page active" id="page-home">
       <div class="home-content">
         <div class="greeting">
@@ -312,7 +296,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       </div>
     </div>
 
-    <!-- SEARCH -->
     <div class="page" id="page-search">
       <div class="search-content">
         <div class="search-box">
@@ -327,7 +310,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       </div>
     </div>
 
-    <!-- LIBRARY -->
     <div class="page" id="page-lib">
       <div class="lib-content">
         <div class="greeting"><div class="greeting-h">Library</div></div>
@@ -342,7 +324,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   </div>
 </div>
 
-<!-- MINI PLAYER -->
 <div class="mini-player" id="miniPlayer" onclick="nav('np')">
   <div class="mini-art" id="miniArt">🎵</div>
   <div class="mini-info"><div class="mini-name" id="miniName">No track</div><div class="mini-artist" id="miniArtist">—</div></div>
@@ -354,7 +335,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   <div class="mini-prog"><div class="mini-prog-fill" id="miniPFill"></div></div>
 </div>
 
-<!-- DOCK -->
 <nav class="dock">
   <div class="dock-item now-playing-tab" id="tab-np" onclick="nav('np')">
     <div class="dock-pip"></div>
@@ -375,18 +355,43 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   </div>
 </nav>
 
-<!-- YouTube IFrame API -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-// ── CONFIG ────────────────────────────────────────────────
 const API = 'https://aethowave-api.onrender.com';
+
+// ── WAKE LOCK ─────────────────────────────────────────────
+const noSleep = new NoSleep();
+let wakeLockEnabled = false;
+function enableWakeLock() {
+  if (wakeLockEnabled) return;
+  noSleep.enable().then(() => { wakeLockEnabled = true; }).catch(() => {});
+}
+
+// ── MEDIA SESSION ─────────────────────────────────────────
+function updateMediaSession(t) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: t.title || 'Unknown',
+    artist: t.artist || 'Unknown',
+    artwork: t.thumb ? [
+      { src: t.thumb, sizes: '256x256', type: 'image/jpeg' },
+      { src: t.thumb, sizes: '512x512', type: 'image/jpeg' },
+    ] : [],
+  });
+  navigator.mediaSession.setActionHandler('play', () => { if (ytPlayer && ytReady) ytPlayer.playVideo(); });
+  navigator.mediaSession.setActionHandler('pause', () => { if (ytPlayer && ytReady) ytPlayer.pauseVideo(); });
+  navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+  navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+  navigator.mediaSession.setActionHandler('seekto', (d) => {
+    if (ytPlayer && d.seekTime != null) ytPlayer.seekTo(d.seekTime, true);
+  });
+}
 
 // ── YOUTUBE IFRAME PLAYER ─────────────────────────────────
 let ytPlayer = null;
 let ytReady = false;
-let ytPendingId = null;  // video ID to play once player is ready
+let ytPendingId = null;
 
-// Called automatically by YouTube API when script loads
 window.onYouTubeIframeAPIReady = function() {
   ytPlayer = new YT.Player('yt-player', {
     height: '1',
@@ -415,7 +420,6 @@ window.onYouTubeIframeAPIReady = function() {
   });
 };
 
-// YT player states: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 video cued
 function onYTStateChange(e) {
   const state = e.data;
   if (state === YT.PlayerState.PLAYING) {
@@ -424,24 +428,25 @@ function onYTStateChange(e) {
     hideStreamLoading();
     setLoad(false);
     startProgressTimer();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
   } else if (state === YT.PlayerState.PAUSED) {
     S.playing = false;
     updatePlayBtns();
     stopProgressTimer();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
   } else if (state === YT.PlayerState.BUFFERING) {
     setLoad(true);
   } else if (state === YT.PlayerState.ENDED) {
     stopProgressTimer();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
     onEnded();
   } else if (state === YT.PlayerState.CUED) {
-    // Video cued but not started
     hideStreamLoading();
     setLoad(false);
   }
 }
 
 function onYTError(e) {
-  // Error codes: 2=invalid param, 5=HTML5 error, 100=not found, 101/150=embedding not allowed
   console.error('YouTube player error:', e.data);
   hideStreamLoading();
   setLoad(false);
@@ -453,7 +458,6 @@ function onYTError(e) {
   setTimeout(nextTrack, 1000);
 }
 
-// Progress polling (YouTube IFrame API has no timeupdate event)
 let _progressTimer = null;
 function startProgressTimer() {
   stopProgressTimer();
@@ -463,6 +467,13 @@ function startProgressTimer() {
       S.currentTime = ytPlayer.getCurrentTime() || 0;
       S.duration = ytPlayer.getDuration() || 0;
       updateProgress();
+      if ('mediaSession' in navigator && S.duration) {
+        navigator.mediaSession.setPositionState({
+          duration: S.duration,
+          playbackRate: 1,
+          position: S.currentTime,
+        });
+      }
     } catch(e) {}
   }, 250);
 }
@@ -471,14 +482,11 @@ function stopProgressTimer() {
 }
 
 function ytPlay(videoId) {
-  if (!ytReady) {
-    ytPendingId = videoId;
-    return;
-  }
+  if (!ytReady) { ytPendingId = videoId; return; }
   ytPlayer.loadVideoById(videoId);
 }
 
-// ── STATE ──────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────
 const S = {
   queue:[], idx:-1, playing:false,
   shuffle:false, repeat:false,
@@ -545,7 +553,7 @@ function setGreet() {
   document.getElementById('greetText').textContent = h<12?'Good morning':h<18?'Good afternoon':'Good evening';
 }
 
-// ── HOME ─────────────────────────────────────────────────
+// ── HOME ──────────────────────────────────────────────────
 async function renderHome() {
   setGreet();
   document.getElementById('genreGrid').innerHTML = genreGridHTML();
@@ -694,17 +702,15 @@ function loadTrack(idx) {
   S.currentTime = 0;
   S.duration = 0;
   stopProgressTimer();
-
   updateTrackUI(t);
   showStreamLoading();
   setLoad(true);
   document.getElementById('tab-np').classList.add('has-track');
-
-  // Play via YouTube IFrame — no backend stream extraction needed!
   ytPlay(t.id);
 }
 
 function togglePlay() {
+  enableWakeLock();
   if (S.queue.length===0) { goSearch(); return; }
   if (!ytPlayer || !ytReady) return;
   if (S.playing) { ytPlayer.pauseVideo(); }
@@ -791,9 +797,9 @@ function toggleMute() {
 
 // ── UI ────────────────────────────────────────────────────
 function updateTrackUI(t) {
+  updateMediaSession(t);
   document.getElementById('npTitle').textContent = t.title;
   document.getElementById('npArtist').textContent = t.artist;
-
   const art = document.getElementById('npArt');
   const loadingEl = document.getElementById('npArtLoading');
   if (t.thumb) {
@@ -802,11 +808,9 @@ function updateTrackUI(t) {
     art.innerHTML = '<div class="np-art-emoji">🎵</div>';
   }
   art.appendChild(loadingEl);
-
   const liked = S.liked.has(t.id);
   document.getElementById('npLike').textContent = liked?'♥':'♡';
   document.getElementById('npLike').classList.toggle('liked', liked);
-
   document.getElementById('miniName').textContent = t.title;
   document.getElementById('miniArtist').textContent = t.artist;
   const ma = document.getElementById('miniArt');
@@ -915,4 +919,3 @@ prewarm();
 </script>
 </body>
 </html>
-
