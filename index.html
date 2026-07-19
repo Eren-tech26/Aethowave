@@ -460,6 +460,7 @@ function playTrackObject(t) {
 }
 
 async function loadTrack(idx) {
+async function loadTrack(idx) {
   if(idx<0||idx>=S.queue.length) return;
   const t=S.queue[idx];
   S.idx=idx;
@@ -468,8 +469,17 @@ async function loadTrack(idx) {
   document.getElementById('tab-np').classList.add('has-track');
 
   try {
-    const streamUrl = `${API}/proxy/${t.id}`;
-    setupMediaSession(t);
+    const data = await apiGet(`/stream/${t.id}`, false);
+    const streamUrl = data.url;
+
+    if (data.track) {
+      S.queue[idx] = {...t, ...data.track};
+      updateTrackUI(S.queue[idx]);
+      setupMediaSession(S.queue[idx]);
+    } else {
+      setupMediaSession(t);
+    }
+
     audio.src = streamUrl;
     audio.load();
     const playPromise = audio.play();
