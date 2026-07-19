@@ -8,6 +8,6 @@ services:
   - type: web
     name: aethowave-api
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app -w 2 -k uvicorn.workers.UvicornWorker --timeout 120
+    buildCommand: pip install -r requirements.txt && pip install -U yt-dlp
+    startCommand: gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
     plan: free
