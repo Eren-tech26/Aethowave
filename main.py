@@ -1,15 +1,14 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 import yt_dlp
 import httpx
 import asyncio
-import os, json, logging, random
+import logging, random
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="AethoWave API", version="3.0.0")
+app = FastAPI(title="AethoWave API", version="4.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,12 +17,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-PIPED_INSTANCES = [
-    "https://pipedapi.kavin.rocks",
-    "https://piped-api.privacy.com.de",
-    "https://api.piped.projectsegfau.lt",
-    "https://pipedapi.syncpundit.io",
-    "https://piped.video/api",
+INVIDIOUS_INSTANCES = [
+    "https://invidious.snopyta.org",
+    "https://invidious.kavin.rocks",
+    "https://vid.puffyan.us",
+    "https://invidious.nerdvpn.de",
+    "https://invidious.projectsegfau.lt",
+    "https://inv.tux.pizza",
+    "https://invidious.flokinet.to",
 ]
 
 YDL_OPTS = {
@@ -83,55 +84,57 @@ async def yt_search(query: str, limit: int) -> list:
         results.append(format_track(e))
     return results
 
-async def get_stream_from_piped(video_id: str) -> dict:
-    instances = PIPED_INSTANCES.copy()
+async def get_stream_from_invidious(video_id: str) -> dict:
+    instances = INVIDIOUS_INSTANCES.copy()
     random.shuffle(instances)
 
     async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
         for base in instances:
             try:
-                url = f"{base}/streams/{video_id}"
-                r = await client.get(url, headers={
-                    "User-Agent": "Mozilla/5.0",
-                    "Accept": "application/json",
-                    "Referer": base + "/",
-                })
+                r = await client.get(
+                    f"{base}/api/v1/videos/{video_id}",
+                    headers={"User-Agent": "Mozilla/5.0"},
+                )
                 if r.status_code != 200:
                     continue
                 data = r.json()
 
-                audio_streams = data.get("audioStreams", [])
-                if not audio_streams:
+                # Get audio-only streams
+                streams = [
+                    f for f in data.get("adaptiveFormats", [])
+                    if "audio" in f.get("type", "")
+                ]
+                if not streams:
                     continue
 
-                audio_streams.sort(key=lambda x: x.get("bitrate", 0), reverse=True)
-                best = audio_streams[0]
+                streams.sort(key=lambda x: x.get("bitrate", 0), reverse=True)
+                best = streams[0]
 
                 track = {
                     "id": video_id,
                     "title": data.get("title", "Unknown"),
-                    "artist": data.get("uploader", "Unknown"),
-                    "thumb": data.get("thumbnailUrl") or f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
-                    "duration": data.get("duration", 0),
-                    "duration_str": fmt_dur(data.get("duration", 0)),
+                    "artist": data.get("author", "Unknown"),
+                    "thumb": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
+                    "duration": data.get("lengthSeconds", 0),
+                    "duration_str": fmt_dur(data.get("lengthSeconds", 0)),
                 }
 
                 return {
                     "url": best["url"],
-                    "mime_type": best.get("mimeType", "audio/webm"),
+                    "mime_type": best.get("type", "audio/webm").split(";")[0],
                     "bitrate": best.get("bitrate", 0),
                     "track": track,
                     "instance": base,
                 }
             except Exception as e:
-                logger.warning(f"Piped instance {base} failed: {e}")
+                logger.warning(f"Invidious instance {base} failed: {e}")
                 continue
 
-    raise HTTPException(status_code=502, detail="All Piped instances failed")
+    raise HTTPException(status_code=502, detail="All Invidious instances failed")
 
 @app.get("/")
 async def root():
-    return {"status": "AethoWave API v3 online", "version": "3.0.0"}
+    return {"status": "AethoWave API v4 online", "version": "4.0.0"}
 
 @app.get("/health")
 async def health():
@@ -175,36 +178,10 @@ async def trending(genre: str = Query("music", max_length=50), limit: int = Quer
 @app.get("/stream/{video_id}")
 async def stream(video_id: str):
     try:
-        result = await get_stream_from_piped(video_id)
+        result = await get_stream_from_invidious(video_id)
         return result
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Stream error for {video_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/proxy/{video_id}")
-async def proxy_stream(video_id: str):
-    try:
-        result = await get_stream_from_piped(video_id)
-        stream_url = result["url"]
-        mime = result.get("mime_type", "audio/webm")
-
-        async def generate():
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
-                async with client.stream("GET", stream_url, headers={
-                    "User-Agent": "Mozilla/5.0",
-                    "Referer": "https://piped.video/"
-                }) as r:
-                    async for chunk in r.aiter_bytes(8192):
-                        yield chunk
-
-        return StreamingResponse(generate(), media_type=mime, headers={
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "no-cache"
-        })
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Proxy error for {video_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
