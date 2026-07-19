@@ -317,7 +317,6 @@ const S = {
 
 const audio = document.getElementById('audioEl');
 audio.volume = S.vol / 100;
-audio.crossOrigin = 'anonymous';
 
 audio.addEventListener('loadedmetadata', () => { S.duration = audio.duration || 0; updateProgress(); });
 audio.addEventListener('timeupdate', () => { S.currentTime = audio.currentTime || 0; updateProgress(); updateMediaSessionPosition(); });
@@ -461,8 +460,6 @@ function playTrackObject(t) {
   loadTrack(S.idx); addToHistory(t); nav('np');
 }
 
-// KEY FIX: API returns flat object {url, title, artist, thumb, duration, duration_str, mime_type}
-// NOT nested under data.track
 async function loadTrack(idx) {
   if(idx<0||idx>=S.queue.length) return;
   const t = S.queue[idx];
@@ -474,10 +471,9 @@ async function loadTrack(idx) {
 
   try {
     const data = await apiGet(`/stream/${t.id}`, false);
+    // Use proxy URL to avoid CORS issues with raw YouTube CDN URLs
+    data.url = `${API}/proxy/${t.id}`;
 
-    if (!data.url) throw new Error('No stream URL returned');
-
-    // Merge returned track metadata back into queue
     const merged = {
       ...t,
       title: data.title || t.title,
